@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Development plan for a 2D Gaussian-to-spiral flow matching experiment with controlled condition density.">
+  <title>Experiment 01 · Condition density</title>
+  <style>
+    :root { color-scheme: light; --ink:#172a3a; --muted:#526676; --line:#dbe4eb; --blue:#195ec8; --paper:#fff; --wash:#f4f7fa; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--wash); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    a { color:var(--blue); text-underline-offset:3px; }
+    .page { max-width:1120px; margin:0 auto; padding:42px 32px 64px; }
+    header { padding:30px 34px; color:white; background:#152f46; border-radius:14px; }
+    .eyebrow { font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#abd2ff; }
+    h1 { font-size:clamp(30px,4.8vw,46px); line-height:1.12; letter-spacing:-.035em; margin:12px 0 14px; }
+    header p { color:#d7e6f3; max-width:760px; margin:0; }
+    .tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+    .tag { font-size:12px; border:1px solid #66819b; border-radius:30px; padding:4px 11px; }
+    nav { display:flex; flex-wrap:wrap; gap:18px; padding:18px 3px; font-size:14px; }
+    nav a { text-decoration:none; }
+    section { padding:25px 30px; margin:15px 0; background:var(--paper); border:1px solid var(--line); border-radius:12px; scroll-margin-top:15px; }
+    h2 { margin:0 0 16px; font-size:22px; letter-spacing:-.025em; }
+    h2 span { color:#7b91a3; font-size:14px; margin-right:12px; }
+    h3 { font-size:16px; margin:20px 0 7px; }
+    p { margin:8px 0 12px; }
+    ul,ol { padding-left:21px; margin:9px 0; }
+    li { margin:7px 0; }
+    .muted,small,figcaption { color:var(--muted); }
+    .callout { background:#edf4ff; border-left:3px solid var(--blue); padding:12px 16px; margin:14px 0; border-radius:0 6px 6px 0; }
+    .formula { background:#f3f6f9; border-radius:7px; padding:12px 16px; font:14px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-x:auto; }
+    code { font:13px ui-monospace,SFMono-Regular,Consolas,monospace; background:#f0f4f7; padding:2px 5px; border-radius:4px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }
+    th,td { text-align:left; vertical-align:top; padding:10px 12px; border-bottom:1px solid var(--line); }
+    th { font-size:12px; text-transform:uppercase; letter-spacing:.055em; color:var(--muted); background:#f6f8fb; }
+    td:first-child { font-weight:600; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .grid h3 { margin-top:0; }
+    .controls { background:#f7f9fc; border:1px solid var(--line); border-radius:9px; padding:16px; margin:18px 0 10px; }
+    .slider-row { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+    label { font-weight:650; }
+    input[type=range] { flex:1; min-width:170px; accent-color:var(--blue); }
+    .readout { font-size:14px; margin-top:8px; color:var(--muted); }
+    figure { margin:12px 0 0; }
+    svg { display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:9px; background:#fff; }
+    figcaption { font-size:12px; margin-top:8px; }
+    .steps { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+    .steps span { padding:6px 12px; border-radius:6px; border:1px solid var(--line); font:14px ui-monospace,monospace; }
+    .steps .primary { background:var(--blue); color:white; border-color:var(--blue); }
+    footer { font-size:12px; color:var(--muted); padding:10px 3px; }
+    @media(max-width:650px) { .page{padding:18px 12px 35px} header,section{padding:22px 18px} .grid{grid-template-columns:1fr} nav{gap:12px} th,td{padding:9px 8px} }
+    @media print { body{background:white;font-size:11px} .page{padding:0;max-width:none} header{background:white;color:var(--ink);border:1px solid var(--line)} header p,.eyebrow{color:var(--muted)} h1{font-size:28px} nav{display:none} section{padding:15px 18px;break-inside:auto} h2,h3{break-after:avoid} table,figure,.callout{break-inside:avoid} input{display:none} a{color:inherit} }
+  </style>
+</head>
+<body>
+<main class="page">
+  <header>
+    <div class="eyebrow">Flow Matching One / Experiment 01</div>
+    <h1>How much condition information<br>does one-step generation need?</h1>
+    <p>Train a model to move points from a Gaussian cloud onto a spiral. Test whether specifying the destination more precisely helps the model reach the spiral in one step.</p>
+    <div class="tags"><span class="tag">Development plan</span><span class="tag">2026-10-14</span><span class="tag">Step 1 implemented · awaiting review</span></div>
+  </header>
+  <nav aria-label="Plan sections">
+    <a href="#question">01 Question</a><a href="#conditions">02 Condition design</a><a href="#training">03 Training</a><a href="#evaluation">04 Evaluation</a><a href="#development">05 Development</a>
+  </nav>
+
+  <section id="question">
+    <h2><span>01</span>Question and scope</h2>
+    <p><strong>Hypothesis:</strong> reducing the number of possible targets for each condition improves generation with one model evaluation. Additional inference steps provide a comparison.</p>
+    <ul>
+      <li><strong>Starting distribution:</strong> a 2D Gaussian cloud centered at the origin, with unit variance in each coordinate: x<sub>0</sub> ∼ N(0, I<sub>2</sub>).</li>
+      <li><strong>Target dataset:</strong> 50,000 points on a spiral that winds around the origin three times while its radius increases from 0.2 to 2.0, before normalization.</li>
+      <li><strong>Data creation:</strong> build the fixed target set in memory when the experiment starts and reuse it across all condition counts.</li>
+      <li><strong>Model and comparison:</strong> use a multilayer perceptron (MLP), a small feedforward neural network, to predict velocity; keep its architecture fixed and train separate weights for each number of conditions.</li>
+    </ul>
+    <p>Number the target points i=0,…,N−1 in order along the spiral, where N=50,000. Place them at evenly spaced angles, subtract their mean μ, and divide both coordinates by the same scale a so their average squared distance from the origin is 2, matching the Gaussian.</p>
+    <div class="formula">s<sub>i</sub> = (i + ½) / N, &nbsp; r(s) = 0.2 + 1.8s, &nbsp; θ(s) = 6πs<br>y(s) = r(s) [cos θ(s), sin θ(s)], &nbsp; x<sub>1,i</sub> = (y(s<sub>i</sub>) − μ) / a<br>μ = mean(y), &nbsp; a = √(mean ‖y − μ‖² / 2), &nbsp; N = 50,000</div>
+    <p class="muted">The points are evenly spaced in angle, not in distance along the curve. Keep these same 50,000 targets in every run and add no random perturbation to their coordinates, so a condition can identify an exact target.</p>
+  </section>
+
+  <section id="conditions">
+    <h2><span>02</span>One control: number of conditions K</h2>
+    <p><strong>Condition density means the number of distinct conditions K.</strong> Split the ordered targets into K equal groups; every target in a group receives the same condition, so knowing the condition narrows the destination to that group.</p>
+    <h3>How the model receives the condition</h3>
+    <p>Assign each group an integer index j, starting at 0, and convert it to a normalized floating-point value c between −1 and 1. Feed this one number to the MLP together with the current position and time.</p>
+    <div class="formula">m = N / K &nbsp; (targets per condition)<br>j = floor(i / m), &nbsp; c<sub>K</sub>(i) = 2(j + ½) / K − 1</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Setting</th><th>Conditions K</th><th>Targets per condition m</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Vanilla flow matching</td><td>1</td><td>50,000</td><td>All targets share c=0; the condition supplies no destination information.</td></tr>
+        <tr><td>Intermediate settings</td><td>10 / 100 / 500 / 2,500 / 10,000</td><td>5,000 / 500 / 100 / 20 / 5</td><td>Increasing K reduces the number of possible targets for each condition.</td></tr>
+        <tr><td>Flow-matching-one</td><td>50,000</td><td>1</td><td>Each condition identifies one exact target point.</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Example: K=100 conditions, 500 targets per group</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Target indices i</th><th>Group index j</th><th>MLP condition c</th></tr></thead>
+      <tbody><tr><td>0–499</td><td>0</td><td>−0.99</td></tr><tr><td>500–999</td><td>1</td><td>−0.97</td></tr><tr><td>49,500–49,999</td><td>99</td><td>0.99</td></tr></tbody>
+    </table></div>
+    <p><strong>Representation:</strong> j is an internal integer label; c is an FP32 input tensor of shape [batch size, 1]. Nearby values of c describe nearby groups along the spiral, and the MLP has the same input size and parameter count for every K.</p>
+    <p><strong>At inference:</strong> choose a group j uniformly, compute c from j and K, and sample independent Gaussian noise. The model receives the position, time, and c; the target coordinates are used for evaluation only.</p>
+    <div class="controls">
+      <div class="slider-row"><label for="density">Explore K</label><input id="density" type="range" min="0" max="6" step="1" value="2" aria-describedby="density-readout"><output id="density-value" for="density">100</output></div>
+      <div id="density-readout" class="readout" aria-live="polite">100 conditions · 500 targets per condition · one scalar input</div>
+    </div>
+    <figure>
+      <svg id="density-plot" viewBox="0 0 880 350" role="img" aria-labelledby="plot-title plot-desc">
+        <title id="plot-title">Condition groups and ideal one-step outputs</title>
+        <desc id="plot-desc">An interactive analytical illustration of grouping spiral points and predicting each group's mean. This is not a trained model result.</desc>
+        <text x="440" y="170" text-anchor="middle" fill="#526676">Enable JavaScript to explore the condition groups.</text>
+      </svg>
+      <figcaption>Analytical illustration, not a trained result: colors identify groups, and the right panel shows each group's average position. Calculate with all 50,000 targets; display at most 2,000 targets and 2,000 group means for readability.</figcaption>
+    </figure>
+    <h3>What should an ideal one-step model predict?</h3>
+    <p>With squared-error training, the ideal velocity at the starting time points toward the average target position for the requested group. This gives an exact reference for distinguishing limited condition information from model error.</p>
+    <div class="formula">At t = 0: &nbsp; v*(x<sub>0</sub>, 0, c) = E[x<sub>1</sub> | c] − x<sub>0</sub><br>Ideal one-step output: &nbsp; x̂<sub>1</sub> = E[x<sub>1</sub> | c]</div>
+    <p>For K=1, the reference is the average of all 50,000 targets; for K=50,000, it is the exact target selected by c. An actual trained model may differ from this reference.</p>
+    <div class="callout"><strong>What this comparison tests:</strong> how specifying a smaller destination group changes one-step generation. The condition includes the group's position along the spiral; results will not establish the same behavior for arbitrary categorical labels.</div>
+  </section>
+
+  <section id="training">
+    <h2><span>03</span>Simple, continuous-time training</h2>
+    <p>The MLP takes a 2D position x<sub>t</sub>, time t, and condition c, then predicts a 2D velocity. Train one model for each K using randomly sampled times; evaluate that same model with different inference step counts.</p>
+    <p>For each training pair, sample a target index i and independent Gaussian noise x<sub>0</sub>, then choose t uniformly between 0 and 1. Interpolate between the noise and target and train the predicted velocity toward their displacement:</p>
+    <div class="formula">i ∼ Uniform{0, …, N−1}, &nbsp; x<sub>0</sub> ∼ N(0,I<sub>2</sub>), &nbsp; t ∼ Uniform[0,1)<br>x<sub>t</sub> = (1−t)x<sub>0</sub> + t x<sub>1,i</sub><br>L = E[‖v<sub>θ</sub>(x<sub>t</sub>, t, c<sub>K</sub>(i)) − (x<sub>1,i</sub> − x<sub>0</sub>)‖²]</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Component</th><th>Proposed default</th></tr></thead>
+      <tbody>
+        <tr><td>MLP</td><td>Concatenate [x<sub>t</sub>(2), t(1), c(1)]; four hidden layers of width 128 with SiLU; linear 2D velocity output.</td></tr>
+        <tr><td>Optimizer</td><td>Adam, learning rate 1e−3, β=(0.9,0.999), ε=1e−8, weight decay 0; gradient norm clipping at 1.0.</td></tr>
+        <tr><td>Budget</td><td>20,000 optimizer updates; global batch size 512; constant learning rate; seeds 0, 1, 2.</td></tr>
+        <tr><td>Precision / device</td><td>32-bit floating point (FP32) throughout; default one device for this small workload.</td></tr>
+        <tr><td>Pair sampling</td><td>Resample independent Gaussian noise for every sampled target at every update; keep the target set fixed.</td></tr>
+        <tr><td>Checkpoints</td><td>Save every 5,000 updates and at completion; use the final checkpoint for the primary comparison, without per-K selection.</td></tr>
+        <tr><td>Keep fixed</td><td>No guidance, target jitter, EMA, distillation, or density-specific tuning in the first sweep.</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li><strong>Paired runs:</strong> reuse initialization, target-index batches, Gaussian draws, and timestep draws across K for each seed; separate training and evaluation RNG streams.</li>
+      <li><strong>Time sampling:</strong> continuous-time training follows the general approach studied by <a href="https://arxiv.org/abs/2401.08740">SiT</a>; this experiment uses an MLP and a deterministic linear path.</li>
+    </ul>
+    <p class="muted">Uniform continuous sampling almost never trains exactly at t=0; report t=0 error explicitly. Add endpoint oversampling only as a later, separately labeled ablation if this becomes a bottleneck.</p>
+  </section>
+
+  <section id="evaluation">
+    <h2><span>04</span>Evaluate quality, coverage, and step count</h2>
+    <p>Use deterministic Euler updates from t=0 to 1. Each S-step run uses t<sub>k</sub>=k/S and Δt=1/S, with one velocity evaluation per step.</p>
+    <div class="steps" aria-label="Inference step counts"><span class="primary">1 step · primary</span><span>2</span><span>4</span><span>8</span><span>16</span><span>32</span><span>64</span></div>
+    <p>Generate 50,000 samples for each combination of K, training seed, and step count, with equal draws per condition; reuse the evaluation noise across K and step counts. At K=50,000, this gives one fresh-noise sample for every condition.</p>
+    <p>Here S is the number of inference steps, a training seed selects a reproducible random-number sequence, and ε is a distance threshold. The main comparison uses training conditions with new noise; unseen conditions are evaluated separately.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Measure</th><th>Definition / purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Geometric precision ↑</td><td>Fraction of generated points within ε of the fixed target set; measures whether samples lie near valid targets.</td></tr>
+        <tr><td>Geometric recall ↑</td><td>Fraction of the 50,000 target points within ε of any generated point; detects missing spiral regions.</td></tr>
+        <tr><td>Sliced Wasserstein-1 ↓</td><td>Project the generated and target sets onto 256 fixed unit directions, compare their sorted coordinates, and average the absolute differences; measures distribution mismatch.</td></tr>
+        <tr><td>Conditional precision ↑</td><td>Fraction within ε of a target belonging to the requested condition; detects correct-looking samples in the wrong group.</td></tr>
+        <tr><td>One-step reference error ↓</td><td>Root mean squared Euclidean distance between one-step outputs and their group means; at K=50,000 this is error relative to the exact requested target.</td></tr>
+        <tr><td>Conditional spread</td><td>For 16 evenly spaced conditions (all if fewer), use 128 noise draws each and compare generated variance with the group's true variance; report absolute values when target variance is zero.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted">Use ε=0.05 in normalized coordinates as primary, with 0.02 and 0.10 as sensitivity checks; nearest-neighbor metrics use KD-trees. These are explicitly defined toy geometric metrics, not the learned-manifold metric of <a href="https://arxiv.org/abs/1904.06991">Kynkäänniemi et al.</a></p>
+    <div class="grid">
+      <div><h3>Required figures</h3><ul>
+        <li>Generated scatter grid: K by S∈{1,4,16,64}, with equal axes, target overlay, and condition colors.</li>
+        <li>Precision, recall, and sliced Wasserstein versus K and S; show mean ± standard deviation across three seeds.</li>
+        <li>Selected trajectories with velocity arrows at S=64, and training/validation loss curves.</li>
+      </ul></div>
+      <div><h3>Interpretation checks</h3><ul>
+        <li>Compare one-step samples with the group-mean reference to separate model error from uncertainty about the requested destination.</li>
+        <li>Treat 64-step samples as a comparison, not ground truth; more steps need not improve an imperfect model.</li>
+        <li>At K=50,000, test 49,999 additional conditions halfway between neighboring training conditions; calculate their targets from the spiral formula.</li>
+      </ul></div>
+    </div>
+    <p class="muted">For the unseen-condition check use s=(i+1)/N for i=0,…,N−2 and c=2s−1, with the original μ and a; all locations lie halfway between neighboring training conditions. Use two noise draws per condition, run the same step-count sweep, and report endpoint RMSE separately from the main comparison.</p>
+  </section>
+
+  <section id="development">
+    <h2><span>05</span>Development sequence and outputs</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Stage</th><th>Work</th><th>Completion check</th></tr></thead>
+      <tbody>
+        <tr><td>1 · Data and conditions</td><td>Implement spiral construction, normalization, independent prior sampling, and the K-controlled grouping.</td><td>Verify exactly K groups with N/K targets each; visualize the data and analytic one-step reference.</td></tr>
+        <tr><td>2 · Training and sampling</td><td>Implement the conditional MLP, continuous-time FM loss, Euler sampling, and checkpoints.</td><td>Check interpolation endpoints, loss/velocity shapes, and one-step Euler algebra; smoke-test CPU, one GPU, and two GPUs when available.</td></tr>
+        <tr><td>3 · Pilot</td><td>Run K∈{1,500,50000}, seed 0, for 10,000 updates.</td><td>Check stable loss and inspect model error across K; finalize the full-sweep configuration after this diagnostic.</td></tr>
+        <tr><td>4 · Full comparison</td><td>Train seven K values × three seeds from scratch for 20,000 updates; evaluate seven step counts.</td><td>21 training runs and 147 main evaluation combinations; retain every seed and report any failures.</td></tr>
+        <tr><td>5 · Report</td><td>Export plots, generated coordinates, metrics, and a short findings document.</td><td>Distinguish measured results from expectations; document any changes to the proposed defaults.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="callout"><strong>Expected behavior to test:</strong> as K increases, the ideal one-step output changes from one overall average to smaller-group averages, then to the exact target points. Measure whether trained models follow this progression and whether additional steps improve their generated distributions.</div>
+  </section>
+  <footer>Standalone planning document · Opens locally · 50,000 targets is the agreed dataset size; other numerical settings are proposed defaults · No trained-model results yet.</footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const N = 50000;
+  const counts = [1, 10, 100, 500, 2500, 10000, 50000];
+  const displayLimit = 2000;
+  const slider = document.getElementById('density');
+  const plot = document.getElementById('density-plot');
+  const output = document.getElementById('density-value');
+  const readout = document.getElementById('density-readout');
+  const raw = Array.from({length:N}, (_, i) => {
+    const s = (i + 0.5) / N, r = 0.2 + 1.8 * s, angle = 6 * Math.PI * s;
+    return [r * Math.cos(angle), r * Math.sin(angle)];
+  });
+  const mean = raw.reduce((a, p) => [a[0] + p[0] / N, a[1] + p[1] / N], [0, 0]);
+  const scale = Math.sqrt(raw.reduce((a, p) => a + ((p[0] - mean[0]) ** 2 + (p[1] - mean[1]) ** 2) / (2 * N), 0));
+  const points = raw.map(p => [(p[0] - mean[0]) / scale, (p[1] - mean[1]) / scale]);
+  const color = (j, K) => `hsl(${210 + 300 * j / Math.max(K, 2)} 68% 43%)`;
+  const location = (p, center) => [center + 59 * p[0], 190 - 59 * p[1]];
+  const circle = (p, center, radius, fill, opacity = 1) => {
+    const [x, y] = location(p, center);
+    return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${radius}" fill="${fill}" opacity="${opacity}"/>`;
+  };
+  function draw() {
+    const K = counts[Number(slider.value)], m = N / K;
+    const groupMeans = Array.from({length:K}, () => [0, 0]);
+    for (let i = 0; i < N; i++) {
+      const group = groupMeans[Math.floor(i / m)];
+      group[0] += points[i][0] / m;
+      group[1] += points[i][1] / m;
+    }
+    output.textContent = K.toLocaleString('en-US');
+    readout.textContent = `${K.toLocaleString('en-US')} conditions · ${m.toLocaleString('en-US')} target${m === 1 ? '' : 's'} per condition · one scalar input`;
+    let body = '<title id="plot-title">Condition groups and ideal one-step outputs</title>' +
+      `<desc id="plot-desc">${K} conditions with ${m} targets each. Left: target groups. Right: exact group means, not trained results.</desc>` +
+      '<text x="220" y="30" text-anchor="middle" font-size="14" fill="#172a3a">Target points · colored by condition</text>' +
+      '<text x="660" y="30" text-anchor="middle" font-size="14" fill="#172a3a">Ideal one-step outputs · group means</text>' +
+      '<line x1="440" y1="52" x2="440" y2="320" stroke="#dbe4eb"/>';
+    for (const center of [220, 660]) {
+      body += `<path d="M${center - 164} 190H${center + 164} M${center} 52V320" stroke="#edf1f5" fill="none"/>`;
+    }
+    for (let sample = 0; sample < displayLimit; sample++) {
+      const i = Math.floor(sample * N / displayLimit);
+      const j = Math.floor(i / m);
+      body += circle(points[i], 220, 1.25, color(j, K), 0.8);
+      body += circle(points[i], 660, 1.1, '#cbd5df', 0.65);
+    }
+    const meansToDisplay = Math.min(K, displayLimit);
+    for (let sample = 0; sample < meansToDisplay; sample++) {
+      const j = Math.floor(sample * K / meansToDisplay);
+      body += circle(groupMeans[j], 660, K < 65 ? 4 : K < 1025 ? 2 : 1.25, color(j, K), 0.9);
+    }
+    plot.innerHTML = body;
+  }
+  slider.addEventListener('input', draw);
+  draw();
+})();
+</script>
+</body>
+</html>

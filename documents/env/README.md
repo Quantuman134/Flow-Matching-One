@@ -2,8 +2,22 @@
 
 ## Status
 
-- On 2026-10-14, Conda lists `flow-matching`; `flow-matching-one` does not yet exist, and installed packages and runtime behavior have not been verified.
+- Environment: `flow-matching-one` exists; Step 1 data preparation and plotting passed on CPU on 2026-10-14.
+- Installed for Step 1: Matplotlib 3.10.6, PyYAML 6.0.2, and their dependencies; the complete planned training environment has not been installed or validated, and Accelerate is currently absent.
 - Observed host: Linux x86_64, four NVIDIA H100 NVL GPUs, NVIDIA driver 615.71.09, and Conda available on PATH.
+
+## Observed versions
+
+| Component | Installed version |
+| --- | --- |
+| Python | 3.11.13 |
+| PyTorch | 2.9.1+cu128 |
+| NumPy | 2.4.6 |
+| Matplotlib | 3.10.6 |
+| PyYAML | 6.0.2 |
+
+- NumPy differs from the planned 2.2.6 pin; Step 1 passed with the installed version, and the environment was not downgraded.
+- `pip check` passed; the observed package snapshot is stored in `local/flow-matching-one/` and the data artifact metadata records the versions used.
 
 ## Baseline
 
