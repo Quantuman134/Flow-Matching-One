@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.conda/
+.env
+documents/env/local/
+data/
+checkpoints/
+outputs/
+runs/
