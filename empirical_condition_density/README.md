@@ -3,13 +3,13 @@
 ## Status
 
 - Level: **1**; Steps 1–2 approved; Step 3 skipped; revised Step 4 awaits review.
-- Full-budget training: pending; verification runs establish implementation behavior only.
+- Full-budget run: completed; seven trained models and 28 main evaluations; results: `outputs/comparison/` within this folder.
 - Design and metric definitions: [experiment plan](../documents/experiment-01-plan.html).
 
 ## Run
 
 ```bash
-bash empirical_condition_density/run.sh [CONFIG.yaml]
+bash empirical_condition_density/scripts/run.sh [CONFIG.yaml]
 ```
 
 - Config: [configs/experiment.yaml](configs/experiment.yaml); optional path is relative to the caller; relative outputs resolve from the repository root.
@@ -20,18 +20,27 @@ bash empirical_condition_density/run.sh [CONFIG.yaml]
 
 ## Code map
 
+```text
+empirical_condition_density/
+├── src/             # Reusable Python components
+├── scripts/         # Run and launch entry points
+├── configs/         # YAML settings
+├── outputs/         # Experiment results
+└── .verification/   # Development checks
+```
+
 | File | Responsibility |
 | --- | --- |
-| `data.py` / `visualize.py` | Fixed in-memory spiral, conditions, fresh pairs, and analytic reference figure. |
-| `model.py` / `flow.py` / `sampling.py` | Conditional MLP, linear-path velocity loss, and Euler integration. |
-| `training.py` | FP32 Accelerate training, fixed validation, records, and resume. |
-| `config.py` | Load and validate YAML into dataclasses; Python defaults are fallbacks. |
-| `run.sh` | Select the Conda environment and call `launch.py`. |
-| `launch.py` | Validate resources and start `run.py` directly or through torchrun. |
-| `run.py` | Train or reuse each K model, evaluate final weights, and export results. |
-| `metrics.py` | Nearest-neighbor metrics and fixed-direction sliced Wasserstein-1. |
-| `evaluation.py` | Schedule sampling, metrics, spread, and coordinate exports. |
-| `reporting.py` | Single-seed tables, scatter/metric figures, loss curves, and trajectories. |
+| `src/data.py` / `src/visualize.py` | Fixed in-memory spiral, conditions, fresh pairs, and analytic reference figure. |
+| `src/model.py` / `src/flow.py` / `src/sampling.py` | Conditional MLP, linear-path velocity loss, and Euler integration. |
+| `src/training.py` | FP32 Accelerate training, fixed validation, records, and resume. |
+| `src/config.py` | Load and validate YAML into dataclasses; Python defaults are fallbacks. |
+| `scripts/run.sh` | Select the Conda environment and call `scripts/launch.py`. |
+| `scripts/launch.py` | Validate resources and start `scripts/run.py` directly or through torchrun. |
+| `scripts/run.py` | Train or reuse each K model, evaluate final weights, and export results. |
+| `src/metrics.py` | Nearest-neighbor metrics and fixed-direction sliced Wasserstein-1. |
+| `src/evaluation.py` | Schedule sampling, metrics, spread, and coordinate exports. |
+| `src/reporting.py` | Single-seed tables, scatter/metric figures, loss curves, and trajectories. |
 
 ## Evaluation flow
 
@@ -42,7 +51,7 @@ bash empirical_condition_density/run.sh [CONFIG.yaml]
 
 ## Outputs and resume
 
-- Root: `<output_dir>/`; resolved settings, experiment manifest/log, reference targets/projections, and metric/summary JSON and CSV files.
+- Root: `empirical_condition_density/outputs/comparison/` by default; resolved settings, experiment manifest/log, reference targets/projections, and metric/summary JSON and CSV files.
 - Models: `K-<count>/seed-<seed>/`; training records, checkpoints, `final-model.safetensors`, and a completion marker.
 - Evaluation: each model's `evaluation/`; inputs, outputs by step count, spread samples, trajectories, metrics, and actual environment records; figures: root `figures/`.
 - Modes: `all` trains and evaluates; `train` trains only; `evaluate` recomputes evaluation from final weights.
@@ -53,5 +62,4 @@ bash empirical_condition_density/run.sh [CONFIG.yaml]
 
 - Earlier checks: data geometry, exact metric/velocity references, CPU/two-GPU workflows, and checkpoint recovery; details are in the [development log](../documents/development-log.md).
 - Revised checks: single-seed CPU/two-GPU workflows and plots passed; Adam gradients remain unmodified, and checkpoint continuation is exact.
-- Local evidence: `outputs/empirical_condition_density/step2_checks/` and `step4_checks/`; these are disposable checks, not scientific results.
-- Revision evidence: `outputs/empirical_condition_density/review_checks/`.
+- Local evidence: `empirical_condition_density/.verification/`; includes data previews, implementation checks, and review checks.

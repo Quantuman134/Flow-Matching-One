@@ -16,13 +16,13 @@ from accelerate import Accelerator
 from accelerate.utils import InitProcessGroupKwargs
 from safetensors.torch import load_file, save_file
 
-from .config import load_config
-from .data import ConditionScheme, build_spiral
-from .evaluation import evaluate_model, evaluation_complete, save_arrays, write_json
-from .metrics import GeometryMetrics
-from .model import ConditionalMLP
-from .reporting import export_figures, export_tables
-from .training import train
+from ..src.config import load_config
+from ..src.data import ConditionScheme, build_spiral
+from ..src.evaluation import evaluate_model, evaluation_complete, save_arrays, write_json
+from ..src.metrics import GeometryMetrics
+from ..src.model import ConditionalMLP
+from ..src.reporting import export_figures, export_tables
+from ..src.training import train
 
 
 def _checkpoint(run_dir):

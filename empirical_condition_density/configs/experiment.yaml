@@ -1,13 +1,13 @@
 # Full comparison: seven condition counts, one shared seed; no pilot stage.
 environment: flow-matching-one
 launch:
-  num_processes: 1       # One process per GPU; CPU also supports multiple processes.
+  num_processes: 4       # One process per GPU; CPU also supports multiple processes.
   device: auto           # auto, cpu, cuda; respects CUDA_VISIBLE_DEVICES.
-  cpu_threads: 4
+  cpu_threads: 16
 
 mode: all                # all, train, evaluate
 resume: false            # Reuse final runs/evaluations; resume incomplete checkpoints.
-output_dir: outputs/empirical_condition_density/comparison
+output_dir: empirical_condition_density/outputs/comparison
 
 data:
   num_targets: 50000

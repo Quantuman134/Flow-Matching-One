@@ -4,6 +4,8 @@
 
 - Give each experiment, analysis, or sub-topic its own descriptive folder at the repository root; keep its scripts, configurations, and launcher together.
 - Keep related analyses within their topic; keep shared utilities and project setup separate from topic folders.
+- Within each topic, use `src/` for reusable Python code, `scripts/` for entry points and launchers, and `configs/` for settings; keep the README at the topic root.
+- Keep each experiment's results in `<topic>/outputs/` and verification artifacts in `<topic>/.verification/`; keep both ignored by Git and separate from each other.
 
 ## Documentation
 

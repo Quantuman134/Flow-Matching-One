@@ -22,7 +22,9 @@ from .flow import flow_matching_loss
 from .model import ConditionalMLP, ModelConfig
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+MODULE_PATH = Path(__file__)
+MODULE_PATH = MODULE_PATH.resolve()
+REPO_ROOT = MODULE_PATH.parents[2]
 
 
 @dataclass(frozen=True)
@@ -41,7 +43,7 @@ class TrainConfig:
     validation_interval: int = 1000
     validation_batch_size: int = 2048
     checkpoint_interval: int = 50000
-    output_dir: str = "outputs/empirical_condition_density"
+    output_dir: str = "empirical_condition_density/outputs"
 
     def __post_init__(self):
         #region Configuration validation

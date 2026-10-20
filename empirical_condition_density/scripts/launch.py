@@ -12,8 +12,8 @@ from pathlib import Path
 
 import torch
 
-from .config import load_config
-from .training import REPO_ROOT
+from ..src.config import load_config
+from ..src.training import REPO_ROOT
 
 
 def launch(path):
@@ -38,7 +38,7 @@ def launch(path):
     if processes > 1:
         command += ["-m", "torch.distributed.run", "--standalone", "--nnodes=1",
                     f"--nproc_per_node={processes}"]
-    command += ["-m", "empirical_condition_density.run", "--config", str(path)]
+    command += ["-m", "empirical_condition_density.scripts.run", "--config", str(path)]
     environment = os.environ.copy()
     # Use the same thread budget for PyTorch and CPU metric libraries.
     for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -49,6 +49,6 @@ def launch(path):
 if __name__ == "__main__":
     #region Argument validation
     if len(sys.argv) != 2:
-        raise SystemExit("Usage: python -m empirical_condition_density.launch CONFIG.yaml")
+        raise SystemExit("Usage: python -m empirical_condition_density.scripts.launch CONFIG.yaml")
     #endregion
     raise SystemExit(launch(sys.argv[1]))

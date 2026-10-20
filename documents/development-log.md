@@ -2,11 +2,28 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-20 — Organize experiment scripts
+
+- Moved reusable Python components to `src/` and executable entry points to `scripts/` within the experiment; updated imports, module commands, and repository-path resolution.
+- Added the general folder convention to project requirements and updated the topic guide; configuration, results, and verification artifacts stay in their existing topic folders.
+- Validation: relocated imports, repository/output paths, saved-protocol compatibility, syntax, and guide links passed; small CPU and two-GPU launcher runs passed under `.verification/organization_checks/`, including an external working directory and spaces in the YAML path.
+
+## 2026-10-20 — Topic-local artifacts
+
+- Moved experiment results to `empirical_condition_density/outputs/` and verification artifacts to `empirical_condition_density/.verification/`; updated default paths, ignore rules, and documentation.
+- Confirmed the existing comparison finished before moving it: seven training runs and 28 main evaluations; retained its original run records.
+- Validation: new default paths, saved-protocol compatibility, all model/evaluation artifacts, and Git ignore rules passed checks.
+
+## 2026-10-20 — Separate verification artifacts
+
+- Added the rule to reserve experiment outputs for actual results; development-check artifacts and the old data preview now live in ignored `empirical_condition_density/.verification/`.
+- Updated artifact references; the actual `comparison/` results remain in the experiment output directory.
+
 ## 2026-10-20 — Explicit evaluation implementation
 
 - Rewrote `evaluation.py` with named intermediate values, separate conversions and file paths, and ordinary loops; removed nested calls, method chains, comprehensions, and calls inside return expressions.
 - Preserved evaluation interfaces, metric definitions, and output formats; focused comparisons verify exact metrics and saved arrays for K=1,10,N.
-- Noise RNG, JSON output, model state, completion checks, syntax, and explicit-style checks passed; local evidence: `outputs/empirical_condition_density/explicit_style_checks/`.
+- Noise RNG, JSON output, model state, completion checks, syntax, and explicit-style checks passed; local evidence: `empirical_condition_density/.verification/explicit_style_checks/`.
 
 ## 2026-10-20 — Explicit coding style
 
@@ -53,7 +70,7 @@ Dated history only; current rules start at the [agent guide](../AGENTS.md), and 
 - Replaced the seed sweep with scalar `seed: 0`; removed gradient clipping and cross-seed statistics; preserved the YAML's four Euler counts and 50K checkpoint interval.
 - Added comments explaining configuration loading, process launch, distributed batches, evaluation stages, metric formulas, and state restoration; revised comparison size: seven models and 28 main evaluations.
 - Validation: single-seed CPU/two-GPU workflows and plots passed; gradients above the former clipping threshold reach Adam unchanged, and unclipped checkpoint continuation is exact.
-- Checkpoint completion metadata now follows an all-rank save barrier; document ownership, links, syntax, and folding regions passed checks; evidence: `outputs/empirical_condition_density/review_checks/`.
+- Checkpoint completion metadata now follows an all-rank save barrier; document ownership, links, syntax, and folding regions passed checks; evidence: `empirical_condition_density/.verification/review_checks/`.
 
 ## 2026-10-19 — Step 4: comparison workflow
 

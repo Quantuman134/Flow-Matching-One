@@ -2,18 +2,24 @@
 set -euo pipefail
 
 if (( $# > 1 )); then
-    echo "Usage: bash empirical_condition_density/run.sh [CONFIG.yaml]" >&2
+    echo "Usage: bash empirical_condition_density/scripts/run.sh [CONFIG.yaml]" >&2
     exit 2
 fi
 
-TOPIC_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_DIR="$(dirname -- "$SCRIPT_PATH")"
+SCRIPT_DIR="$(cd -- "$SCRIPT_DIR" && pwd)"
+TOPIC_DIR="$(dirname -- "$SCRIPT_DIR")"
 REPO_ROOT="$(dirname -- "$TOPIC_DIR")"
 CONFIG_PATH="${1:-$TOPIC_DIR/configs/experiment.yaml}"
 if [[ ! -f "$CONFIG_PATH" ]]; then
     echo "Configuration not found: $CONFIG_PATH" >&2
     exit 2
 fi
-CONFIG_PATH="$(cd -- "$(dirname -- "$CONFIG_PATH")" && pwd)/$(basename -- "$CONFIG_PATH")"
+CONFIG_DIR="$(dirname -- "$CONFIG_PATH")"
+CONFIG_NAME="$(basename -- "$CONFIG_PATH")"
+CONFIG_DIR="$(cd -- "$CONFIG_DIR" && pwd)"
+CONFIG_PATH="$CONFIG_DIR/$CONFIG_NAME"
 CONDA_BASE="$(conda info --base)"
 # Read the environment name with Conda's YAML reader before selecting Python.
 ENV_NAME="$("$CONDA_BASE/bin/python" - "$CONFIG_PATH" <<'PY'
@@ -31,4 +37,4 @@ PY
 
 cd -- "$REPO_ROOT"
 exec conda run --no-capture-output --name "$ENV_NAME" \
-    python -u -m empirical_condition_density.launch "$CONFIG_PATH"
+    python -u -m empirical_condition_density.scripts.launch "$CONFIG_PATH"
