@@ -8,7 +8,8 @@ import yaml
 
 from .data import ConditionScheme, SpiralConfig
 from .model import ModelConfig
-from .training import REPO_ROOT, TrainConfig
+from .paths import resolve_project_path
+from .training import TrainConfig
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,7 @@ class ExperimentConfig:
     condition_counts: list[int]
     seed: int
     evaluation: EvaluationConfig
+    overwrite: bool = False
 
     def __post_init__(self):
         #region Configuration validation
@@ -97,6 +99,12 @@ class ExperimentConfig:
             raise ValueError("environment must be a nonempty Conda environment name.")
         if self.mode not in ("all", "train", "evaluate") or type(self.resume) is not bool:
             raise ValueError("mode must be all/train/evaluate; resume must be a YAML boolean.")
+        if type(self.overwrite) is not bool:
+            raise ValueError("overwrite must be a YAML boolean.")
+        if self.overwrite and self.resume:
+            raise ValueError("Choose either overwrite: true or resume: true, not both.")
+        if self.overwrite and self.mode == "evaluate":
+            raise ValueError("Evaluation needs existing weights; set overwrite: false.")
         if not isinstance(self.output_dir, str) or not self.output_dir.strip():
             raise ValueError("output_dir must be a nonempty path.")
         if not isinstance(self.condition_counts, list) or not self.condition_counts or (
@@ -113,18 +121,23 @@ class ExperimentConfig:
 
     @property
     def output_root(self):
-        path = Path(self.output_dir).expanduser()
-        return (path if path.is_absolute() else REPO_ROOT / path).resolve()
+        path = resolve_project_path(self.output_dir)
+        return path
 
     def train_config(self, count):
         """Combine shared settings with the current condition count for one trainer."""
-        return TrainConfig(**self.training, num_conditions=count, seed=self.seed,
-                           device=self.launch.device, output_dir=str(self.output_root))
+        output_root = self.output_root
+        output_dir = str(output_root)
+        training_config = TrainConfig(
+            **self.training, num_conditions=count, seed=self.seed,
+            device=self.launch.device, output_dir=output_dir,
+        )
+        return training_config
 
     def protocol(self):
         """Fields that must match before reusing any comparison artifacts."""
         result = asdict(self)
-        for key in ("environment", "launch", "mode", "resume", "output_dir"):
+        for key in ("environment", "launch", "mode", "resume", "overwrite", "output_dir"):
             result.pop(key)
         return result
 
@@ -142,7 +155,10 @@ def _construct(cls, values):
 
 def load_config(path):
     """Load YAML, reject unknown settings, and construct the typed interface."""
-    values = yaml.safe_load(Path(path).read_text())
+    config_path = Path(path)
+    config_path = config_path.expanduser()
+    config_text = config_path.read_text()
+    values = yaml.safe_load(config_text)
     #region YAML validation
     if not isinstance(values, dict):
         raise ValueError("Experiment YAML must contain a mapping.")

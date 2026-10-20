@@ -13,6 +13,7 @@
 
 - Use YAML for settings and Bash launchers for common one-command tasks; read run settings from YAML rather than duplicating them in launchers.
 - Document command and path conventions in the topic README.
+- Resolve output and resume paths independently of the working directory; store references between run artifacts relative to their owning run folder so relocation does not break them.
 - Provide a runnable Conda setup script for the environment described in the project requirements.
 
 ## Development levels

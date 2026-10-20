@@ -2,6 +2,19 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-20 — Output overwrite
+
+- Added YAML `overwrite` and enabled it in the default configuration; the main rank replaces the selected output folder before fresh training, including stale checkpoints, logs, and evaluations.
+- Kept overwrite separate from resume and evaluation-only mode; restricted replacement to run folders inside the topic's output or verification folders, with input YAML stored outside.
+- Validation: CPU and two-GPU replacement, stale-artifact removal, resume, configuration/path guards, legacy YAML, syntax, and whitespace checks passed; evidence: `.verification/overwrite_checks/`. The existing comparison results remain unchanged.
+
+## 2026-10-20 — Relocation path fixes
+
+- Fixed direct Python entry-point imports and centralized output/resume path resolution; new completion records use run-local checkpoint names.
+- Repaired seven moved checkpoint references and the saved replay configuration; backed up original metadata in `.verification/path_dependency_checks/metadata_backup/`.
+- Reproduced `run.sh` resolving the correct folder and stopping at existing-output protection; preserved the user's 2M-update setting, which needs a new output directory for a fresh run.
+- Validation: Bash and direct-Python launchers passed from `/tmp`, including a spaced YAML filename; relocated checkpoints resumed using repository-relative paths and run-local names; seven baseline references, replay settings, syntax, and whitespace checks passed.
+
 ## 2026-10-20 — Organize experiment scripts
 
 - Moved reusable Python components to `src/` and executable entry points to `scripts/` within the experiment; updated imports, module commands, and repository-path resolution.

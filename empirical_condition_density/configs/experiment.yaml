@@ -7,6 +7,7 @@ launch:
 
 mode: all                # all, train, evaluate
 resume: false            # Reuse final runs/evaluations; resume incomplete checkpoints.
+overwrite: true          # Replace this output folder and train from scratch; requires resume: false.
 output_dir: empirical_condition_density/outputs/comparison
 
 data:
@@ -18,7 +19,7 @@ model:
   hidden_dim: 128
   num_hidden_layers: 4
 training:
-  num_steps: 20000
+  num_steps: 2000000
   global_batch_size: 512
   gradient_accumulation_steps: 1
   learning_rate: 0.001

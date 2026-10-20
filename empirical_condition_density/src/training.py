@@ -20,11 +20,7 @@ from accelerate.utils import set_seed
 from .data import ConditionScheme, PairBatch, SpiralConfig, build_spiral, sample_pairs
 from .flow import flow_matching_loss
 from .model import ConditionalMLP, ModelConfig
-
-
-MODULE_PATH = Path(__file__)
-MODULE_PATH = MODULE_PATH.resolve()
-REPO_ROOT = MODULE_PATH.parents[2]
+from .paths import REPO_ROOT, resolve_checkpoint_path, resolve_project_path
 
 
 @dataclass(frozen=True)
@@ -179,9 +175,7 @@ def train(
         raise ValueError("validation_batch_size must divide evenly across ranks.")
     #endregion
     micro_batch_size = config.global_batch_size // partitions
-    output_root = Path(config.output_dir).expanduser()
-    if not output_root.is_absolute():
-        output_root = REPO_ROOT / output_root
+    output_root = resolve_project_path(config.output_dir)
     run_dir = output_root.resolve() / f"K-{config.num_conditions:05d}" / f"seed-{config.seed}"
     occupied = torch.tensor(int((run_dir / "run.yaml").exists()), device=accelerator.device)
     occupied = accelerator.reduce(occupied, reduction="sum").item()
@@ -201,7 +195,7 @@ def train(
         "world_size": accelerator.num_processes,
     }
     if resume_from is not None:
-        resume_from = Path(resume_from).expanduser().resolve()
+        resume_from = resolve_checkpoint_path(resume_from, run_dir)
         saved = yaml.safe_load((resume_from / "metadata.yaml").read_text())
         #region Resume validation
         if saved["signature"] != signature:

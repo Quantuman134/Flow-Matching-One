@@ -12,13 +12,23 @@ from pathlib import Path
 
 import torch
 
-from ..src.config import load_config
-from ..src.training import REPO_ROOT
+# Direct file execution needs the repository on Python's import path.
+if __package__ is None or __package__ == "":
+    script_path = Path(__file__)
+    script_path = script_path.resolve()
+    repository_root = script_path.parents[2]
+    repository_path = str(repository_root)
+    sys.path.insert(0, repository_path)
+
+from empirical_condition_density.src.config import load_config
+from empirical_condition_density.src.paths import REPO_ROOT
 
 
 def launch(path):
     """Validate resources, then start run.py with the YAML-selected process count."""
-    path = Path(path).expanduser().resolve()
+    path = Path(path)
+    path = path.expanduser()
+    path = path.resolve()
     config = load_config(path)
     processes = config.launch.num_processes
     use_cuda = config.launch.device != "cpu" and torch.cuda.is_available()
@@ -38,12 +48,14 @@ def launch(path):
     if processes > 1:
         command += ["-m", "torch.distributed.run", "--standalone", "--nnodes=1",
                     f"--nproc_per_node={processes}"]
-    command += ["-m", "empirical_condition_density.scripts.run", "--config", str(path)]
+    config_path = str(path)
+    command += ["-m", "empirical_condition_density.scripts.run", "--config", config_path]
     environment = os.environ.copy()
     # Use the same thread budget for PyTorch and CPU metric libraries.
     for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
         environment[name] = str(config.launch.cpu_threads)
-    return subprocess.call(command, cwd=REPO_ROOT, env=environment)
+    exit_code = subprocess.call(command, cwd=REPO_ROOT, env=environment)
+    return exit_code
 
 
 if __name__ == "__main__":
@@ -51,4 +63,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         raise SystemExit("Usage: python -m empirical_condition_density.scripts.launch CONFIG.yaml")
     #endregion
-    raise SystemExit(launch(sys.argv[1]))
+    config_path = sys.argv[1]
+    exit_code = launch(config_path)
+    raise SystemExit(exit_code)

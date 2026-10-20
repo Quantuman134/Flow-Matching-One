@@ -4,10 +4,20 @@ import argparse
 import gc
 import json
 import logging
+import shutil
 import sys
 import time
 from dataclasses import asdict
 from datetime import timedelta
+from pathlib import Path
+
+# Direct file execution needs the repository on Python's import path.
+if __package__ is None or __package__ == "":
+    script_path = Path(__file__)
+    script_path = script_path.resolve()
+    repository_root = script_path.parents[2]
+    repository_path = str(repository_root)
+    sys.path.insert(0, repository_path)
 
 import numpy as np
 import torch
@@ -16,13 +26,14 @@ from accelerate import Accelerator
 from accelerate.utils import InitProcessGroupKwargs
 from safetensors.torch import load_file, save_file
 
-from ..src.config import load_config
-from ..src.data import ConditionScheme, build_spiral
-from ..src.evaluation import evaluate_model, evaluation_complete, save_arrays, write_json
-from ..src.metrics import GeometryMetrics
-from ..src.model import ConditionalMLP
-from ..src.reporting import export_figures, export_tables
-from ..src.training import train
+from empirical_condition_density.src.config import load_config
+from empirical_condition_density.src.data import ConditionScheme, build_spiral
+from empirical_condition_density.src.evaluation import evaluate_model, evaluation_complete, save_arrays, write_json
+from empirical_condition_density.src.metrics import GeometryMetrics
+from empirical_condition_density.src.model import ConditionalMLP
+from empirical_condition_density.src.paths import REPO_ROOT
+from empirical_condition_density.src.reporting import export_figures, export_tables
+from empirical_condition_density.src.training import train
 
 
 def _checkpoint(run_dir):
@@ -32,6 +43,28 @@ def _checkpoint(run_dir):
         metadata = yaml.safe_load(path.read_text())
         choices.append((metadata["step"], path.parent))
     return max(choices, default=(0, None))[1]
+
+
+def _validate_overwrite(root, config_path):
+    """Limit recursive replacement to one experiment or verification run folder."""
+    topic_root = REPO_ROOT / "empirical_condition_density"
+    allowed_parents = (topic_root / "outputs", topic_root / ".verification")
+    allowed = False
+    for parent in allowed_parents:
+        if root.is_relative_to(parent) and root != parent:
+            allowed = True
+
+    settings_path = Path(config_path)
+    settings_path = settings_path.resolve()
+
+    #region Output replacement validation
+    if not allowed:
+        raise ValueError("Overwrite requires a run folder inside this topic's outputs/ or .verification/.")
+    if settings_path.is_relative_to(root):
+        raise ValueError("Keep the input YAML outside the output folder when overwriting.")
+    if root.exists() and not root.is_dir():
+        raise ValueError(f"Output path is not a directory: {root}")
+    #endregion
 
 
 def run(config_path):
@@ -55,10 +88,14 @@ def run(config_path):
             raise ValueError("Process count differs from YAML; use run.sh to launch the experiment.")
         if config.launch.device == "cuda" and accelerator.device.type != "cuda":
             raise RuntimeError("CUDA was requested but is unavailable.")
-        if manifest.exists():
+        if config.overwrite:
+            _validate_overwrite(root, config_path)
+        elif manifest.exists():
             saved = yaml.safe_load(manifest.read_text())
             if not config.resume:
-                raise FileExistsError(f"Experiment exists: {root}; set resume: true or change output_dir.")
+                raise FileExistsError(
+                    f"Experiment exists: {root}; set overwrite: true, resume: true, or change output_dir."
+                )
             if saved["protocol"] != config.protocol():
                 raise ValueError("Existing experiment settings differ; use another output_dir.")
         elif any(root.glob("K-*/seed-*/run.yaml")):
@@ -66,9 +103,12 @@ def run(config_path):
         elif config.mode == "evaluate":
             raise FileNotFoundError("Evaluation requires an existing experiment with trained models.")
         #endregion
-        # Every rank must finish checking before the main rank creates the manifest.
+        # All ranks finish validation before rank zero replaces shared outputs.
         accelerator.wait_for_everyone()
         if accelerator.is_main_process:
+            replaced = config.overwrite and root.exists()
+            if replaced:
+                shutil.rmtree(root)
             root.mkdir(parents=True, exist_ok=True)
             (root / "resolved.yaml").write_text(yaml.safe_dump(asdict(config), sort_keys=False))
             if not manifest.exists():
@@ -80,6 +120,8 @@ def run(config_path):
             for handler in handlers:
                 handler.setFormatter(formatter)
                 logger.addHandler(handler)
+            if replaced:
+                logger.info("Overwrite | replaced previous experiment output | output=%s", root)
             logger.info("Sweep | mode=%s | runs=%s | evaluations=%s | output=%s", config.mode,
                         len(config.condition_counts),
                         len(config.condition_counts) * len(config.evaluation.steps), root)
@@ -115,7 +157,10 @@ def run(config_path):
                 if accelerator.is_main_process:
                     save_file({k: v.detach().cpu().contiguous() for k, v in result.model.state_dict().items()},
                               str(weights))
-                    write_json(complete, {"step": result.step, "checkpoint": str(result.checkpoint)})
+                    # A run-local checkpoint name stays valid when results are moved.
+                    checkpoint_name = result.checkpoint.name
+                    completion_record = {"step": result.step, "checkpoint": checkpoint_name}
+                    write_json(complete, completion_record)
                 accelerator.wait_for_everyone()
             elif accelerator.is_main_process:
                 logger.info("Reusing final model | K=%s | seed=%s", count, seed)
@@ -171,4 +216,5 @@ def run(config_path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
-    run(parser.parse_args().config)
+    arguments = parser.parse_args()
+    run(arguments.config)

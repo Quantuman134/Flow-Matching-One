@@ -3,7 +3,7 @@
 ## Status
 
 - Level: **1**; Steps 1–2 approved; Step 3 skipped; revised Step 4 awaits review.
-- Full-budget run: completed; seven trained models and 28 main evaluations; results: `outputs/comparison/` within this folder.
+- Completed baseline: 20K updates per model, seven trained models, and 28 main evaluations; results: `outputs/comparison/` within this folder.
 - Design and metric definitions: [experiment plan](../documents/experiment-01-plan.html).
 
 ## Run
@@ -13,9 +13,10 @@ bash empirical_condition_density/scripts/run.sh [CONFIG.yaml]
 ```
 
 - Config: [configs/experiment.yaml](configs/experiment.yaml); optional path is relative to the caller; relative outputs resolve from the repository root.
-- Training: **50K** targets; **seven** condition counts; **seed 0**; **20K** updates per model; Adam; **no gradient clipping**.
+- Python entry points support file execution and `python -m`; use `scripts/launch.py` to honor the configured process count.
+- Training: **50K** targets; **seven** condition counts; **seed 0**; update budget from YAML; Adam; **no gradient clipping**.
 - Inference: Euler steps **1, 4, 16, 64**; **seven** training runs and **28** main evaluations.
-- Checkpoints: every **50K** updates plus completion; the current 20K-update budget saves the final checkpoint.
+- Checkpoints: every **50K** updates plus completion.
 - Devices: `launch.device` selects auto/cpu/cuda; `num_processes` selects GPU count; global batch stays fixed; evaluation uses the main process.
 
 ## Code map
@@ -35,6 +36,7 @@ empirical_condition_density/
 | `src/model.py` / `src/flow.py` / `src/sampling.py` | Conditional MLP, linear-path velocity loss, and Euler integration. |
 | `src/training.py` | FP32 Accelerate training, fixed validation, records, and resume. |
 | `src/config.py` | Load and validate YAML into dataclasses; Python defaults are fallbacks. |
+| `src/paths.py` | Resolve repository-relative outputs and resume paths independently of the working directory. |
 | `scripts/run.sh` | Select the Conda environment and call `scripts/launch.py`. |
 | `scripts/launch.py` | Validate resources and start `scripts/run.py` directly or through torchrun. |
 | `scripts/run.py` | Train or reuse each K model, evaluate final weights, and export results. |
@@ -55,7 +57,10 @@ empirical_condition_density/
 - Models: `K-<count>/seed-<seed>/`; training records, checkpoints, `final-model.safetensors`, and a completion marker.
 - Evaluation: each model's `evaluation/`; inputs, outputs by step count, spread samples, trajectories, metrics, and actual environment records; figures: root `figures/`.
 - Modes: `all` trains and evaluates; `train` trains only; `evaluate` recomputes evaluation from final weights.
-- Resume: set `resume: true`; reuse completed work and resume incomplete training from the latest complete checkpoint; incompatible settings require a new output directory.
+- Resume: set `resume: true` and `overwrite: false`; reuse completed work and resume incomplete training from the latest complete checkpoint; incompatible settings require a fresh run.
+- Checkpoints: completion records store run-local names; a bare resume name resolves inside its run folder, and relative resume paths with directories resolve from the repository root.
+- Overwrite: `overwrite: true` deletes the previous output folder and starts fresh; currently enabled in the default YAML. Keep `resume: false`; evaluation-only mode requires `overwrite: false`.
+- Protection: overwrite accepts individual run folders under this topic's `outputs/` or `.verification/`; keep input YAML outside the output folder. With both `resume` and `overwrite` false, existing experiments are rejected.
 - Portability: incomplete training requires the original process count and accumulation; final weights can be evaluated on another GPU count or CPU.
 
 ## Verification
