@@ -59,7 +59,7 @@
     <div class="eyebrow">Flow Matching One / Experiment 01</div>
     <h1>How much condition information<br>does one-step generation need?</h1>
     <p>Train a model to move points from a Gaussian cloud onto a spiral. Test whether specifying the destination more precisely helps the model reach the spiral in one step.</p>
-    <div class="tags"><span class="tag">Development plan</span><span class="tag">2026-10-14</span><span class="tag">Step 1 implemented · awaiting review</span></div>
+    <div class="tags"><span class="tag">Development plan</span><span class="tag">Updated 2026-10-19</span><span class="tag">Step 2 approved · pilot skipped · Step 4 next</span></div>
   </header>
   <nav aria-label="Plan sections">
     <a href="#question">01 Question</a><a href="#conditions">02 Condition design</a><a href="#training">03 Training</a><a href="#evaluation">04 Evaluation</a><a href="#development">05 Development</a>
@@ -183,14 +183,14 @@
       <tbody>
         <tr><td>1 · Data and conditions</td><td>Implement spiral construction, normalization, independent prior sampling, and the K-controlled grouping.</td><td>Verify exactly K groups with N/K targets each; visualize the data and analytic one-step reference.</td></tr>
         <tr><td>2 · Training and sampling</td><td>Implement the conditional MLP, continuous-time FM loss, Euler sampling, and checkpoints.</td><td>Check interpolation endpoints, loss/velocity shapes, and one-step Euler algebra; smoke-test CPU, one GPU, and two GPUs when available.</td></tr>
-        <tr><td>3 · Pilot</td><td>Run K∈{1,500,50000}, seed 0, for 10,000 updates.</td><td>Check stable loss and inspect model error across K; finalize the full-sweep configuration after this diagnostic.</td></tr>
+        <tr><td>3 · Pilot — skipped</td><td>Skipped by user request on 2026-10-19.</td><td>Proceed directly to Step 4 with the comparison settings below.</td></tr>
         <tr><td>4 · Full comparison</td><td>Train seven K values × three seeds from scratch for 20,000 updates; evaluate seven step counts.</td><td>21 training runs and 147 main evaluation combinations; retain every seed and report any failures.</td></tr>
         <tr><td>5 · Report</td><td>Export plots, generated coordinates, metrics, and a short findings document.</td><td>Distinguish measured results from expectations; document any changes to the proposed defaults.</td></tr>
       </tbody>
     </table></div>
     <div class="callout"><strong>Expected behavior to test:</strong> as K increases, the ideal one-step output changes from one overall average to smaller-group averages, then to the exact target points. Measure whether trained models follow this progression and whether additional steps improve their generated distributions.</div>
   </section>
-  <footer>Standalone planning document · Opens locally · 50,000 targets is the agreed dataset size; other numerical settings are proposed defaults · No trained-model results yet.</footer>
+  <footer>Standalone planning document · Opens locally · 50,000 targets is the agreed dataset size; other numerical settings are proposed defaults · Step 2 approved; pilot skipped; full comparison pending.</footer>
 </main>
 <script>
 (() => {

@@ -33,7 +33,7 @@
 | Level-1 | Agent implements one reviewable step. | Required after each step for this experiment. | Agent runs focused self-checks when necessary; dedicated test code is optional. |
 | Level-2 | Agent implements and adds tests for each changed part. | Required. | Run tests related to the changes; use full-stack tests only when necessary. |
 
-- Active level: **level-1** for `empirical_condition_density`; Step 1 is implemented and awaiting user review, and Step 2 has not started.
+- Active level: **level-1** for `empirical_condition_density`; Steps 1–2 are approved, Step 3 (pilot) is skipped by user request, and Step 4 (full comparison) is next.
 
 ## Organization
 

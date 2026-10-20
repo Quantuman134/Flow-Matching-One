@@ -2,8 +2,8 @@
 
 ## Status
 
-- Environment: `flow-matching-one` exists; Step 1 data preparation and plotting passed on CPU on 2026-10-14.
-- Installed for Step 1: Matplotlib 3.10.6, PyYAML 6.0.2, and their dependencies; the complete planned training environment has not been installed or validated, and Accelerate is currently absent.
+- Environment: `flow-matching-one`; Step 1 CPU data/plotting passed on 2026-10-14, and Step 2 CPU, one-GPU, and two-GPU training checks passed on 2026-10-15.
+- Added for Step 2: Accelerate 1.10.1, huggingface-hub 0.34.4, and safetensors 0.6.2; the experiment's current imports work, while the remaining baseline packages have not all been installed or checked.
 - Observed host: Linux x86_64, four NVIDIA H100 NVL GPUs, NVIDIA driver 615.71.09, and Conda available on PATH.
 
 ## Observed versions
@@ -15,6 +15,9 @@
 | NumPy | 2.4.6 |
 | Matplotlib | 3.10.6 |
 | PyYAML | 6.0.2 |
+| Accelerate | 1.10.1 |
+| huggingface-hub | 0.34.4 |
+| safetensors | 0.6.2 |
 
 - NumPy differs from the planned 2.2.6 pin; Step 1 passed with the installed version, and the environment was not downgraded.
 - `pip check` passed; the observed package snapshot is stored in `local/flow-matching-one/` and the data artifact metadata records the versions used.
@@ -84,7 +87,7 @@ CUDA_VISIBLE_DEVICES=0,1 torchrun --standalone --nnodes=1 --nproc_per_node=2 \
 ```
 
 - The multi-GPU check validates a training step, collective communication, and synchronized parameters; it uses Accelerate inside the script and `torchrun` to select the process count.
-- These commands validate the environment only; the flow matching training implementation is pending.
+- These commands validate the complete baseline environment; Step 2 training was checked separately using the packages actually needed by its implementation.
 
 ## Reproducibility records
 

@@ -11,9 +11,10 @@
 - The user requests a 2D Gaussian prior, a spiral target, a conditional MLP, continuous-time training, and Euler inference with one-step performance as the primary focus.
 - Use 50,000 fixed target points; the proposed control is the number of ordered groups K, ranging from K=1 to one condition per target while model size and target data stay fixed.
 - Represent each integer group index j as the normalized FP32 value `c = 2(j + 0.5)/K - 1`; this is one scalar MLP input with a consistent geometric order across densities.
-- Step 1 implements the spiral, condition encoding, independent pair sampling, and reference visualization in `empirical_condition_density/`; it is awaiting level-1 review.
+- Step 1 implements the spiral, condition encoding, independent pair sampling, and reference visualization in `empirical_condition_density/`; the user approved continuing to Step 2.
 - Data will be built in memory during the experiment; the unified YAML configuration and Bash launcher are deferred until the full experiment code is assembled.
-- Model training and evaluation have not started; the remaining training and evaluation settings are proposed defaults.
+- Step 2 implements the conditional MLP, continuous-time velocity loss, FP32 trainer, checkpoint resume, and Euler sampling; the user approved it on 2026-10-19.
+- Step 3 (pilot) is skipped by user request; Step 4 proceeds directly to the full comparison implementation, with no scientific performance conclusions yet.
 
 ## Mathematical interpretation
 

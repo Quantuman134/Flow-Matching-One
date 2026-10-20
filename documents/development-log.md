@@ -1,5 +1,17 @@
 # Development log
 
+## 2026-10-19 — Step 2 approval and pilot skipped
+
+- The user approved Step 2 and requested a commit of the reviewed implementation.
+- Skip Step 3 (pilot); proceed directly to Step 4 (full comparison), retaining level-1 review after implementation.
+
+## 2026-10-15 — Step 2: model, training, and sampling
+
+- Implemented the conditional MLP, linear flow matching loss, Euler sampler, and FP32 Accelerate trainer with fixed global batches, run records, validation, and checkpoint resume.
+- Core checks passed for model dimensions, path endpoints, velocity loss, learning, Euler steps 1–64, invalid inputs, numerical guards, and precision/mode restoration.
+- Short CPU, one-GPU, and two-GPU checks passed; CPU resume was bitwise identical to uninterrupted training, and two-GPU resume and parameter synchronization passed.
+- Installed the pinned Accelerate dependencies and updated environment records; Step 2 awaits level-1 review, with pilot runs, unified input YAML, and the Bash launcher still pending.
+
 ## 2026-10-14 — Validation folding convention
 
 - Adopted labeled folding regions for related validation checks in the general coding conventions; checks on intermediate results stay near their computation.
