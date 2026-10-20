@@ -1,103 +1,68 @@
 # Environment
 
-## Status
+## Installed
 
-- Environment: `flow-matching-one`; Step 1 CPU data/plotting passed on 2026-10-14, and Step 2 CPU, one-GPU, and two-GPU training checks passed on 2026-10-15.
-- Added for Step 2: Accelerate 1.10.1, huggingface-hub 0.34.4, and safetensors 0.6.2; the experiment's current imports work, while the remaining baseline packages have not all been installed or checked.
-- Observed host: Linux x86_64, four NVIDIA H100 NVL GPUs, NVIDIA driver 615.71.09, and Conda available on PATH.
+- Name: `flow-matching-one`; platform: Linux x86_64; host: four NVIDIA H100 NVL GPUs; driver: **615.71.09**.
+- Status: experiment dependencies installed; the full baseline is only partially installed; `pip check` passed.
 
-## Observed versions
-
-| Component | Installed version |
+| Component | Observed version |
 | --- | --- |
 | Python | 3.11.13 |
 | PyTorch | 2.9.1+cu128 |
-| NumPy | 2.4.6 |
-| Matplotlib | 3.10.6 |
-| PyYAML | 6.0.2 |
+| NumPy / SciPy | 2.4.6 / 1.15.3 |
+| Matplotlib / PyYAML | 3.10.6 / 6.0.2 |
 | Accelerate | 1.10.1 |
-| huggingface-hub | 0.34.4 |
-| safetensors | 0.6.2 |
+| huggingface-hub / safetensors | 0.34.4 / 0.6.2 |
+| gpustat | 1.1.1 |
 
-- NumPy differs from the planned 2.2.6 pin; Step 1 passed with the installed version, and the environment was not downgraded.
-- `pip check` passed; the observed package snapshot is stored in `local/flow-matching-one/` and the data artifact metadata records the versions used.
+- NumPy: installed **2.4.6**, planned **2.2.6**; no downgrade performed; SciPy accepts the installed version.
+- Observed snapshots: `local/flow-matching-one/environment.yml` and `requirements.lock.txt`; ignored by Git.
 
-## Baseline
+## Planned baseline
 
-| Component | Selection |
-| --- | --- |
-| Platform | Linux x86_64 with Bash and Conda |
-| Environment name | `flow-matching-one` by default |
-| Python / pip | 3.11.13 / 25.2 |
-| PyTorch / torchvision | 2.9.1 / 0.24.1 |
-| Compute build | CUDA 12.8 (`cu128`) by default; `cu126` and `cpu` selectable |
-| Distributed training | Hugging Face Accelerate |
-| Remaining dependencies | Exact direct versions in [requirements.txt](requirements.txt) |
-
-- This is an initial pinned baseline, not a claim to use the newest releases; project-specific dependencies will follow the research requirements.
-- PyTorch wheels supply the CUDA runtime; the host needs a compatible NVIDIA driver, while a local CUDA toolkit is needed only for custom CUDA builds.
-- Other operating systems and GPU backends need separate installation profiles; GPU-count portability remains a requirement for training code.
+- Python / pip: **3.11.13 / 25.2**; PyTorch / torchvision: **2.9.1 / 0.24.1**.
+- Compute builds: **cu128** default; **cu126** and **cpu** selectable; direct dependency pins: [requirements.txt](requirements.txt).
+- CUDA wheels supply the runtime; the host needs a compatible driver; custom CUDA builds additionally need a local toolkit.
+- Setup profiles cover Linux with Bash/Conda; other platforms need separate profiles.
 
 ## Setup
-
-From the repository root:
 
 ```bash
 bash scripts/setup_env.sh
 conda activate flow-matching-one
+# Alternative: bash scripts/setup_env.sh flow-matching-one-cpu cpu
+# Alternative: bash scripts/setup_env.sh flow-matching-one-cu126 cu126
 ```
 
-Alternative builds or names:
+- Creates a new environment, installs pins, and validates imports plus one training step; existing environments are left untouched.
+- CUDA setup requires a visible GPU; choose the CPU profile on hosts without NVIDIA GPUs.
+
+## Full baseline check
 
 ```bash
-bash scripts/setup_env.sh flow-matching-one-cpu cpu
-bash scripts/setup_env.sh flow-matching-one-cu126 cu126
-```
-
-- The script creates a new environment, installs pinned direct dependencies, runs `pip check`, and checks package imports and one training step.
-- CUDA profiles require a working, visible GPU during setup; use the CPU profile for machines without NVIDIA GPUs.
-- Existing environments are left untouched; if installation fails, inspect the error and remove the incomplete environment or choose a new name before retrying.
-
-## Rename the existing environment
-
-Leave `flow-matching` before renaming it:
-
-```bash
-conda activate base
-conda rename --name flow-matching flow-matching-one
-conda activate flow-matching-one
-```
-
-- Renaming preserves the environment's current packages; it does not complete an interrupted installation.
-
-## Validation and GPU count
-
-After activating the environment:
-
-```bash
-# CPU
 python scripts/check_env.py --cpu
-
-# One GPU
-CUDA_VISIBLE_DEVICES=0 python scripts/check_env.py --require-cuda
-
-# Two GPUs; change the visible device list and nproc_per_node together.
+# CUDA; change visible devices and process count together.
 CUDA_VISIBLE_DEVICES=0,1 torchrun --standalone --nnodes=1 --nproc_per_node=2 \
     scripts/check_env.py --require-cuda
 ```
 
-- The multi-GPU check validates a training step, collective communication, and synchronized parameters; it uses Accelerate inside the script and `torchrun` to select the process count.
-- These commands validate the complete baseline environment; Step 2 training was checked separately using the packages actually needed by its implementation.
+- The full check imports every baseline dependency; install remaining packages before running it in the partially installed environment.
+- Distributed checks cover training, communication, and synchronized parameters; implementation-specific checks belong in the [development log](../development-log.md).
 
-## Reproducibility records
+## Reproduce
 
-- Successful setup writes a resolved Conda export, `pip freeze`, and host/build information to `local/<environment-name>/`; these machine-specific records are ignored by Git.
-- Direct dependencies are pinned; transitive dependencies are resolved at install time, so archive the generated records alongside each experiment for the exact package set.
-- Recreate a matching-platform environment with `PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu128 conda env create --name <new-name> --file <snapshot>/environment.yml`; select the recorded compute build instead of `cu128` when different.
-- Remove the exported `prefix` entry when transferring machines; Conda exports and pip freezes record versions but do not provide artifact hashes or guarantee future package availability.
-- Package snapshots do not guarantee identical results across hardware; experiments must also record configuration, seeds, dataset/model revisions, GPU count, and global batch size.
+- Successful setup saves Conda/package exports and host information under `local/<environment-name>/`; archive these with experiment outputs.
+- Recreate on a matching platform with the recorded compute index:
+
+```bash
+PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cu128 \
+    conda env create --name <new-name> --file <snapshot>/environment.yml
+```
+
+- Remove the exported `prefix` when moving machines; snapshots preserve resolved versions, not package artifacts or identical results across hardware.
+- Run provenance rules: [coding requirements](../coding_requirements.md#logging-and-resume); setup and package-change history: [development log](../development-log.md).
 
 ## References
 
-- [Official PyTorch version/build commands](https://pytorch.org/get-started/previous-versions/) provide the selected PyTorch/torchvision pairing and CUDA/CPU indexes.
-- [Accelerate quicktour](https://huggingface.co/docs/accelerate/quicktour) describes portable device placement and distributed training; [launching scripts](https://huggingface.co/docs/accelerate/en/basic_tutorials/launch) covers process launch options.
+- [PyTorch build/version commands](https://pytorch.org/get-started/previous-versions/).
+- [Accelerate quicktour](https://huggingface.co/docs/accelerate/quicktour) and [process launching](https://huggingface.co/docs/accelerate/en/basic_tutorials/launch).

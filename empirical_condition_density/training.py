@@ -1,4 +1,4 @@
-"""Callable FP32 trainer; experiment configuration files and launchers come later."""
+"""FP32 Accelerate trainer with fixed global batches and resumable checkpoints."""
 
 import json
 import logging
@@ -35,13 +35,12 @@ class TrainConfig:
     adam_betas: tuple[float, float] = (0.9, 0.999)
     adam_eps: float = 1e-8
     weight_decay: float = 0.0
-    max_grad_norm: float = 1.0
     seed: int = 0
     device: str = "auto"              # auto, cpu, or cuda; rank placement is automatic
     log_interval: int = 100
     validation_interval: int = 1000
     validation_batch_size: int = 2048
-    checkpoint_interval: int = 5000
+    checkpoint_interval: int = 50000
     output_dir: str = "outputs/empirical_condition_density"
 
     def __post_init__(self):
@@ -53,7 +52,7 @@ class TrainConfig:
         ):
             if type(getattr(self, name)) is not int or getattr(self, name) < 1:
                 raise ValueError(f"{name} must be a positive integer.")
-        for name in ("learning_rate", "adam_eps", "max_grad_norm"):
+        for name in ("learning_rate", "adam_eps"):
             if not math.isfinite(getattr(self, name)) or getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be finite and positive.")
         if not math.isfinite(self.weight_decay) or self.weight_decay < 0:
@@ -195,7 +194,7 @@ def train(
         "model": asdict(model_config), "spiral": asdict(spiral_config),
         "training": {key: settings[key] for key in (
             "num_conditions", "global_batch_size", "gradient_accumulation_steps",
-            "learning_rate", "adam_betas", "adam_eps", "weight_decay", "max_grad_norm", "seed",
+            "learning_rate", "adam_betas", "adam_eps", "weight_decay", "seed",
         )},
         "world_size": accelerator.num_processes,
     }
@@ -209,9 +208,11 @@ def train(
             raise ValueError("num_steps is earlier than the checkpoint update.")
         #endregion
 
+    # Reset initialization and pair RNGs for every K to keep comparisons paired.
     set_seed(config.seed)
     data = build_spiral(spiral_config)
     state = _TrainingState(config.seed)
+    # Validation is repeatable and independent of the advancing training stream.
     validation_rng = torch.Generator(device="cpu").manual_seed((config.seed + 1) % 2**32)
     validation_batch = sample_pairs(data, scheme, config.validation_batch_size, validation_rng)
     validation_times = torch.rand(
@@ -246,8 +247,10 @@ def train(
             metrics_file.flush()
 
     def checkpoint():
+        # All ranks save state; metadata marks a fully written checkpoint.
         folder = run_dir / f"checkpoint-{state.step:07d}"
         accelerator.save_state(str(folder))
+        accelerator.wait_for_everyone()
         if accelerator.is_main_process:
             (folder / "metadata.yaml").write_text(yaml.safe_dump({
                 "step": state.step, "signature": signature,
@@ -298,6 +301,7 @@ def train(
             )
             step_loss = torch.zeros((), dtype=torch.float32, device=accelerator.device)
             for micro in range(config.gradient_accumulation_steps):
+                # Disjoint slices cover the same global batch at any GPU count.
                 offset = (micro * accelerator.num_processes + accelerator.process_index)
                 start = offset * micro_batch_size
                 selection = slice(start, start + micro_batch_size)
@@ -309,9 +313,14 @@ def train(
                         model, x0, x1, times[selection].to(accelerator.device), condition,
                     )
                     step_loss += loss.detach() / config.gradient_accumulation_steps
+                    # Accelerate scales accumulated gradients and synchronizes the last microbatch.
                     accelerator.backward(loss)
                     if accelerator.sync_gradients:
-                        grad_norm = accelerator.clip_grad_norm_(model.parameters(), config.max_grad_norm)
+                        # Measure the synchronized norm for diagnostics; do not modify gradients.
+                        grad_norm = torch.linalg.vector_norm(torch.stack([
+                            torch.linalg.vector_norm(p.grad.detach())
+                            for p in model.parameters() if p.grad is not None
+                        ]))
                         step_loss = accelerator.reduce(step_loss, reduction="mean")
                         #region Numerical validation
                         if not torch.isfinite(step_loss) or not torch.isfinite(grad_norm):

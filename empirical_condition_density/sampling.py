@@ -62,6 +62,7 @@ def sample_euler(
             raise FloatingPointError("Euler sampling produced non-finite positions.")
         #endregion
     finally:
+        # Restore caller state even if a model call or numerical check raises.
         torch.set_float32_matmul_precision(previous_precision)
         model.train(was_training)
     return SamplingResult(

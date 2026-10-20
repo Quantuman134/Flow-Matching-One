@@ -1,10 +1,12 @@
 # Project documents
 
-- [Requirements](requirements.md): working conventions, project scope, folder organization, logging, and GPU portability.
-- [Research direction](research.md): proposed training paradigm, mathematical assumptions, and open questions.
-- [Experiment 01 plan](experiment-01-plan.html): 50,000-point Gaussian-to-spiral comparison, condition encoding, training defaults, and evaluation.
-- [Empirical condition density](../empirical_condition_density/README.md): data, model, training, sampling, and verification; Steps 1–2 approved, pilot skipped, full comparison next.
-- [Environment](env/README.md): setup instructions, dependency baseline, and observed hardware.
-- [Development log](development-log.md): significant changes and validation results.
-
-Update the relevant document with each related change; keep each item to one or two sentences.
+| Document | Responsibility |
+| --- | --- |
+| [Agent guide](../AGENTS.md) | General working approach and communication. |
+| [Coding requirements](coding_requirements.md) | Code style, execution, review, logging, and device portability. |
+| [Project requirements](project_requirements.md) | Project organization, document responsibilities, and environment records. |
+| [Research](research.md) | Hypotheses, assumptions, and open questions. |
+| [Experiment plan](experiment-01-plan.html) | Condition-density experiment design and metrics. |
+| [Topic README](../empirical_condition_density/README.md) | Code map, commands, outputs, and review status. |
+| [Environment](env/README.md) | Setup, installed versions, and reproduction. |
+| [Development log](development-log.md) | Dated changes and validation history. |

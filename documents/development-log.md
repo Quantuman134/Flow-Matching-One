@@ -1,5 +1,68 @@
 # Development log
 
+Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
+
+## 2026-10-20 — Explicit evaluation implementation
+
+- Rewrote `evaluation.py` with named intermediate values, separate conversions and file paths, and ordinary loops; removed nested calls, method chains, comprehensions, and calls inside return expressions.
+- Preserved evaluation interfaces, metric definitions, and output formats; focused comparisons verify exact metrics and saved arrays for K=1,10,N.
+- Noise RNG, JSON output, model state, completion checks, syntax, and explicit-style checks passed; local evidence: `outputs/empirical_condition_density/explicit_style_checks/`.
+
+## 2026-10-20 — Explicit coding style
+
+- Strengthened the coding convention to favor named intermediate values, separate operations, simple loops, and shallow control flow; nested or embedded calls are exceptions rather than the default.
+
+## 2026-10-20 — GPU monitoring dependency
+
+- Recorded the user's pip installation of `gpustat` **1.1.1** in `flow-matching-one`; added its version pin to environment requirements for future setup.
+- Refreshed Conda and pip snapshots; `pip check` and the `gpustat --version` command passed.
+
+## 2026-10-20 — Readable function calls
+
+- Added the convention to keep short calls inline and separate long or complex embedded calls into named intermediate results.
+- Applied it in `evaluation.py` to metadata, sampling inputs, metric collection, variance calculations, and progress serialization.
+- Validation: metrics and saved arrays match the previous implementation exactly for K=1,10,N; model state, completion checks, syntax, and whitespace checks passed.
+
+## 2026-10-20 — Remove unseen-condition evaluation
+
+- Removed `_unseen()`, its sampling branch, settings, metric/figure exports, and completion checks; simplified evaluation signatures and updated callers and experiment documentation.
+- Evaluation now uses training conditions with fresh noise, including the conditional-spread check.
+- Validation: remaining metrics match previous outputs exactly for K=1,10,N; a small CPU launcher run, completion checks, syntax, and output checks passed.
+
+## 2026-10-19 — Three-guide organization
+
+- Redistributed the agent guide and former `requirements.md` into `AGENTS.md`, `coding_requirements.md`, and `project_requirements.md`; each rule has one owner.
+- Removed the former requirements file and updated active references; coding and project requirements remain general, with topic-specific settings kept in topic documents.
+- Validation: guide structure, local links, duplicate items, and whitespace checks passed; no code changed.
+
+## 2026-10-19 — One source for working rules
+
+- Consolidated working rules in `requirements.md`; `AGENTS.md` now points there instead of repeating requirements, including the logical-block spacing convention.
+
+## 2026-10-19 — Logical block spacing
+
+- Added the convention to separate logical code blocks with blank lines; applied it in `evaluation.py` and verified the Python syntax tree is unchanged.
+
+## 2026-10-19 — Launcher introduction
+
+- Added a three-point header describing resource validation, process selection, and execution environment handling in `launch.py`; documentation-only change.
+
+## 2026-10-19 — Documentation ownership and review revisions
+
+- Made requirements general, kept research notes focused on hypotheses, and compacted the document index, experiment guide, and environment guide; added ownership, compactness, and code-comment rules to `AGENTS.md`.
+- Replaced the seed sweep with scalar `seed: 0`; removed gradient clipping and cross-seed statistics; preserved the YAML's four Euler counts and 50K checkpoint interval.
+- Added comments explaining configuration loading, process launch, distributed batches, evaluation stages, metric formulas, and state restoration; revised comparison size: seven models and 28 main evaluations.
+- Validation: single-seed CPU/two-GPU workflows and plots passed; gradients above the former clipping threshold reach Adam unchanged, and unclipped checkpoint continuation is exact.
+- Checkpoint completion metadata now follows an all-rank save barrier; document ownership, links, syntax, and folding regions passed checks; evidence: `outputs/empirical_condition_density/review_checks/`.
+
+## 2026-10-19 — Step 4: comparison workflow
+
+- Committed approved Step 2 as `577fef6`; implemented the comparison runner, strict YAML configuration, Bash launcher, metric tables, coordinate exports, and figures.
+- Added geometric and conditional precision, recall, sliced Wasserstein-1, group-mean RMSE, conditional spread, and separate unseen-condition evaluation; full defaults specify 21 training runs and 147 main evaluations.
+- Validation passed for 50K metric references, exact velocity fields at all seven Euler counts, small CPU/two-GPU sweeps, exact distributed checkpoint recovery, portable CPU evaluation, seed summaries, and output guards.
+- Fixed a shared-manifest creation race found by the two-GPU check; installed planned SciPy 1.15.3 and refreshed environment snapshots.
+- Step 4 implementation awaits level-1 review; the pilot remains skipped, and the full-budget sweep and findings report remain pending.
+
 ## 2026-10-19 — Step 2 approval and pilot skipped
 
 - The user approved Step 2 and requested a commit of the reviewed implementation.

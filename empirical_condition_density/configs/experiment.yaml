@@ -1,0 +1,48 @@
+# Full comparison: seven condition counts, one shared seed; no pilot stage.
+environment: flow-matching-one
+launch:
+  num_processes: 1       # One process per GPU; CPU also supports multiple processes.
+  device: auto           # auto, cpu, cuda; respects CUDA_VISIBLE_DEVICES.
+  cpu_threads: 4
+
+mode: all                # all, train, evaluate
+resume: false            # Reuse final runs/evaluations; resume incomplete checkpoints.
+output_dir: outputs/empirical_condition_density/comparison
+
+data:
+  num_targets: 50000
+  num_turns: 3.0
+  radius_start: 0.2
+  radius_end: 2.0
+model:
+  hidden_dim: 128
+  num_hidden_layers: 4
+training:
+  num_steps: 20000
+  global_batch_size: 512
+  gradient_accumulation_steps: 1
+  learning_rate: 0.001
+  adam_betas: [0.9, 0.999]
+  adam_eps: 0.00000001
+  weight_decay: 0.0
+  log_interval: 100
+  validation_interval: 1000
+  validation_batch_size: 2048
+  checkpoint_interval: 50000
+condition_counts: [1, 10, 100, 500, 2500, 10000, 50000]
+seed: 0
+
+evaluation:
+  steps: [1, 4, 16, 64]
+  thresholds: [0.02, 0.05, 0.10]
+  primary_threshold: 0.05
+  num_directions: 256
+  direction_seed: 1729
+  noise_seed_offset: 1000000
+  batch_size: 4096
+  spread_conditions: 16
+  spread_samples: 128
+  trajectory_count: 16
+  trajectory_steps: 64
+  scatter_steps: [1, 4, 16, 64]
+  max_plot_points: 2000
