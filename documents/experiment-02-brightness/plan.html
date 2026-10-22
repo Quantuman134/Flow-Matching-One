@@ -209,12 +209,12 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 </tbody>
 </table></div>
-<p>Example paths: <code>train/0000/00015464.JPEG</code>, <code>val/0000/00048480.JPEG</code>. Inspection on 2026-10-21 confirmed directory counts and sampled JPEG/RGB headers; implementation verification includes a full decode check.</p>
+<p>Example paths: <code>train/0000/00015464.JPEG</code>, <code>val/0000/00048480.JPEG</code>. Training startup indexes raw filenames in memory and validates counts/classes; image decoding and preprocessing happen when batches request sources.</p>
 <h3 id="preprocessing">Preprocessing</h3>
 <ol>
 <li>Decode RGB, apply EXIF orientation, resize the shorter side to 256 with antialiased bicubic interpolation, and center-crop 256 × 256.</li>
 <li>Convert to FP32 sRGB in [0,1]. Apply a shared random horizontal flip with probability 0.5 during training.</li>
-<li>Sample exposure independently for each image presentation and build its target in memory after preprocessing. Keep the source dataset read-only; record relative-path manifests and hashes.</li>
+<li>Sample exposure independently for each image presentation and build its target in memory after preprocessing. Keep the source dataset read-only; record ordered-path fingerprints and fixed validation cases in the training run metadata.</li>
 </ol>
 <h3 id="validation">Validation</h3>
 <div aria-label="data table" class="table-wrap" role="region" tabindex="0"><table>
@@ -865,7 +865,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 <tbody>
 <tr>
 <td>Current stage</td>
-<td>Experiment planning.</td>
+<td><a href="../../imagenet_brightness_flow/README.md">Implementation, review status, and usage</a>.</td>
 </tr>
 <tr>
 <td>Topic folder</td>
@@ -873,7 +873,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 <tr>
 <td>Development level</td>
-<td>Proposed level 1; review each implementation step before the next.</td>
+<td>Level 1, selected by the user; complete one implementation step and wait for review before the next. Rules: <a href="../coding_requirements.md#development-levels">coding requirements</a>.</td>
 </tr>
 </tbody>
 </table></div>
@@ -888,7 +888,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 <tbody>
 <tr>
 <td>1</td>
-<td>Data manifests, preprocessing, exposure operation, metrics.</td>
+<td>Runtime data loading, preprocessing, exposure operation, metrics.</td>
 <td>Dataset counts, training/validation separation, monitor membership, known exposure values, clipping, and error decompositions.</td>
 </tr>
 <tr>

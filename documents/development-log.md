@@ -2,6 +2,26 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-21 — Runtime data workflow
+
+- Verified integer-size resizing against torchvision's runtime implementation; retained the integer form at the user's request. The preprocessing test passed, and integer/list forms produced identical portrait, landscape, and square results.
+- Moved focused checks to `imagenet_brightness_flow/tests/` under the standard unittest runner; added the test/self-check placement rule to the coding requirements.
+- Removed standalone preparation commands, CSV manifest I/O, and preparation settings. Added in-memory indexing and runtime dataset construction; source decoding/preprocessing occurs on access, and exposure targets are constructed per training batch. Updated the plan, experiment YAML, and README.
+- Validation: eight focused tests passed, including lazy decoding and zero filesystem artifacts during dataset construction. The runtime factory indexed 1,281,167 training and all 50,000 validation images, selected 1,000 monitor and 16 preview cases, and passed metrics checks on 16 real sources. Evidence: `.verification/step1_checks/runtime_cpu.log` and `runtime_data.json`; Step 1 remains awaiting review.
+
+## 2026-10-21 — Environment review rules
+
+- Added environment changes to the coding restrictions: level 0 permits installing needed packages in the specified environment; levels 1–2 require listing packages or new environments and waiting for review before installation or creation.
+- Combined implementation review, verification, and environment changes in one table governed by the topic's single development level; linked configuration recording to the existing environment-record requirements.
+- Validation: unified-level wording, document link, and whitespace checks passed.
+
+## 2026-10-21 — Brightness Step 1
+
+- Recorded user-selected development level 1 in the plan and new topic README. Implemented strict YAML data settings, source manifests, deterministic monitor/preview selection, EXIF/RGB preprocessing, fresh exposure pairs, and per-image RGB/luminance/latent metrics with saturation and flat-image handling.
+- Prepared `imagenet_brightness_flow/outputs/data-v1/`: 1,281,167 training and all 50,000 validation paths, 1,000 monitor sources, and 16 preview cases covering nine exposures. Saved hashes, resolved settings, provenance, and progress logs; sample decoding covered 2,000 images.
+- Validation: eight focused CPU checks passed; real manifest hashes, class mappings, monitor membership, 16-source preprocessing, and CPU/CUDA pairing/metrics passed. Bash and direct Python preparation passed from `/tmp` with spaced paths; evidence: `imagenet_brightness_flow/.verification/step1_checks/`.
+- Observed torchvision 0.24.1+cu128 and Pillow 12.3.0 in the existing environment; recorded versions without package changes. Step 1 awaits review; Steps 2–4 remain pending.
+
 ## 2026-10-21 — W&B and full validation plan
 
 - Added W&B API-key environment entry, run/resume records, and 16 fixed source/reference/output previews at each validation; recorded the SDK as a planned dependency. Final evaluation now includes all 50,000 validation images: 5.4M comparisons and 37.8M per-image velocity evaluations.

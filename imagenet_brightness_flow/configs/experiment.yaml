@@ -1,0 +1,18 @@
+environment: flow-matching-one
+seed: 0
+
+data:
+  root: /data/hkzhang/imagenet_raw
+  image_size: 256
+  train_flip_probability: 0.5
+  exposure_min: -1.0
+  exposure_max: 1.0
+  evaluation_exposures: [-1.0, -0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75, 1.0]
+  monitor_per_class: 1
+  preview_images: 16
+  expected_classes: 1000
+  expected_train_images: 1281167
+  expected_validation_images: 50000
+
+metrics:
+  flat_variance_threshold: 1.0e-8

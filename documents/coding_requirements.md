@@ -18,13 +18,16 @@
 
 ## Development levels
 
-- Implement at the level recorded in the topic README; under levels 1–2, complete one reviewable step and wait for review before proceeding.
+- Apply the single development level recorded in the topic README to implementation, verification, and environment changes. Under levels 1–2, complete one reviewable step and wait for review before proceeding.
 
-| Level | Human review | Verification |
-| --- | --- | --- |
-| 0 | Not required. | Focused checks when necessary. |
-| 1 | After each implementation step. | Focused self-checks when necessary. |
-| 2 | After each implementation step. | Add tests for changed parts; use full-stack tests only when necessary. |
+| Level | Implementation review | Verification | Environment changes |
+| --- | --- | --- | --- |
+| 0 | Not required. | Focused checks when necessary. | Install needed packages directly in the specified environment. |
+| 1 | After each implementation step. | Focused self-checks when necessary. | List required packages or new environments; wait for review before installation or creation. |
+| 2 | After each implementation step. | Add tests for changed parts; use full-stack tests only when necessary. | List required packages or new environments; wait for review before installation or creation. |
+
+- Record the resulting environment configuration following the [environment records](project_requirements.md#environment-records) requirements.
+- Put test and self-check code in the topic's `tests/` and use standard test runners. Reserve `scripts/` for experiment entry points and launchers.
 
 ## Logging and resume
 

@@ -9,6 +9,7 @@
 | --- | --- |
 | Python | 3.11.13 |
 | PyTorch | 2.9.1+cu128 |
+| torchvision / Pillow | 0.24.1+cu128 / 12.3.0 |
 | NumPy / SciPy | 2.4.6 / 1.15.3 |
 | Matplotlib / PyYAML | 3.10.6 / 6.0.2 |
 | Accelerate | 1.10.1 |
@@ -17,6 +18,7 @@
 
 - NumPy: installed **2.4.6**, planned **2.2.6**; no downgrade performed; SciPy accepts the installed version.
 - Observed snapshots: `local/flow-matching-one/environment.yml` and `requirements.lock.txt`; ignored by Git.
+- Brightness Step 1 observed torchvision/Pillow versions above and passed CPU/CUDA data checks; planned Pillow remains 11.3.0 in the baseline pins. Verification evidence records the tested versions.
 
 ## Planned baseline
 
