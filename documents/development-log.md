@@ -2,6 +2,29 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-21 — W&B and full validation plan
+
+- Added W&B API-key environment entry, run/resume records, and 16 fixed source/reference/output previews at each validation; recorded the SDK as a planned dependency. Final evaluation now includes all 50,000 validation images: 5.4M comparisons and 37.8M per-image velocity evaluations.
+- Proposed global batch 1024 with 25,000 updates, retaining 25.6M image presentations; aligned validation/checkpoints to 2,500 updates and EMA decay to 0.9996. Added an equal-image pilot comparison against batch 256 with learning rate 1e-4 as the starting point.
+- Replaced notation prose with tables, removed VAE reconstruction measurements, and strengthened the guide's direct-writing rule. Validation: HTML links/navigation, settings consistency, removed-section checks, W&B placeholders, budget arithmetic, and whitespace checks passed. Documentation changes only.
+
+## 2026-10-21 — Brightness plan review
+
+- Changed the plan to SiT-S/2, including width 384, six attention heads, and the matching exposure embedding; confirmed `/data/hkzhang/imagenet_raw` as the selected dataset.
+- Renamed “Training times” to “Training timestep sampling”; rewrote evaluation around metric purposes, calculations, scales, and examples, with explained equations and optional decomposition details. Removed the redundant “Controls and interpretation” section; retained VAE reconstruction measurements under evaluation.
+- Updated the agent guide's communication rules to require defined symbols and explained metrics before formulas. Validation: architecture checked against official SiT definitions; HTML links, section navigation, metric decomposition examples, and whitespace checks passed. No experiment code or training changed.
+
+## 2026-10-21 — HTML plan presentation
+
+- Converted the [brightness experiment plan](experiment-02-brightness/plan.html) to a self-contained HTML document with section navigation, responsive tables, readable formulas, and print styles; updated links and removed the superseded Markdown version.
+- Validation: all original plan content retained; local links, section anchors, document structure, and whitespace checks passed. No experiment settings changed.
+
+## 2026-10-21 — Brightness experiment plan
+
+- Added the [ImageNet brightness plan](experiment-02-brightness/plan.html) in its own document folder; specified SiT-B with a frozen VAE, online exposure targets, four training-time settings, twelve NFE comparison cells, and brightness/spatial error diagnostics. Implementation remains unstarted.
+- Inspected dataset entries and sample image headers: `~/ILSVRC` contains pooled latents; raw JPEGs are under `/data/hkzhang/imagenet_raw`, with 1,281,167 training and 50,000 validation images. Checked official SiT and color-space references; linked the plan from the document index and research questions.
+- Validation: local document links, exposure identity, both luminance MSE decompositions, training/inference time-grid labels, evaluation counts, and whitespace checks passed. Preserved existing unrelated working-tree edits; no training or environment changes.
+
 ## 2026-10-20 — Output overwrite
 
 - Added YAML `overwrite` and enabled it in the default configuration; the main rank replaces the selected output folder before fresh training, including stale checkpoints, logs, and evaluations.

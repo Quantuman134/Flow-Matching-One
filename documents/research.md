@@ -22,3 +22,9 @@
 
 - Framework: [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747); the deterministic-condition interpretation above is our derivation.
 - First study: [condition-density experiment plan](experiment-01-plan.html); implementation and review status live in the [topic README](../empirical_condition_density/README.md).
+
+## Structured source question
+
+- Can a clean-image source supply enough content information for accurate one-step brightness transport, with brightness as the explicit condition?
+- This differs from a target uniquely determined by its condition: the target depends on both source image and brightness. Benefits over direct residual regression and sensitivity to training-time coverage remain open.
+- Design and proposed settings: [brightness experiment plan](experiment-02-brightness/plan.html).

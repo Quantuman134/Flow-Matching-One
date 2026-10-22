@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="Experiment plan for SiT-S brightness transport on ImageNet, with online exposure targets and a training timestep versus NFE comparison." name="description"/>
+<title>Experiment 02 · Brightness flow matching</title>
+<style>
+:root { color-scheme: light; --ink: #192b39; --muted: #536773; --line: #dbe3e7; --accent: #006d77; --paper: #fff; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+body { margin: 0; background: #f3f6f7; color: var(--ink); font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, [tabindex]:focus-visible { outline: 3px solid #b76811; outline-offset: 4px; }
+.skip { position: absolute; top: -100px; left: 12px; z-index: 10; padding: 10px 16px; background: white; }
+.skip:focus { top: 12px; }
+.layout { display: grid; grid-template-columns: 226px minmax(0, 1fr); gap: 40px; max-width: 1320px; margin: 0 auto; padding: 40px 30px 64px; }
+.sidebar { position: sticky; top: 30px; align-self: start; max-height: calc(100vh - 60px); overflow-y: auto; padding: 8px 5px 20px 0; }
+.brand { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 750; color: var(--muted); }
+.sidebar-title { margin: 6px 0 22px; font-size: 21px; font-weight: 750; line-height: 1.35; }
+nav { display: grid; gap: 3px; }
+nav a { display: flex; gap: 10px; border-radius: 6px; padding: 7px 9px; color: var(--ink); text-decoration: none; font-size: 13px; line-height: 1.45; }
+nav a:hover { background: #e1ecee; }
+nav span { color: var(--accent); font: 11px/1.8 ui-monospace, monospace; }
+.back { display: inline-block; margin: 24px 9px 0; font-size: 12px; }
+main { min-width: 0; }
+header { background: #16343e; color: white; padding: 40px; border-radius: 12px; margin-bottom: 24px; }
+.eyebrow { color: #a6d8d8; font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+h1 { font-size: clamp(30px, 4vw, 43px); line-height: 1.15; letter-spacing: -.03em; margin: 13px 0 18px; max-width: 680px; }
+header p { color: #e1ebee; margin: 0; max-width: 680px; }
+.metadata { margin-top: 22px; color: #c1d8de; font-size: 13px; }
+.summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 24px; }
+.summary div { border: 1px solid var(--line); border-radius: 9px; background: var(--paper); padding: 18px 20px; }
+.summary strong { display: block; font-size: 24px; line-height: 1.2; color: var(--accent); }
+.summary span { display: block; font-size: 12px; color: var(--muted); margin-top: 6px; }
+section { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 28px 32px; margin-bottom: 20px; }
+h2 { font-size: 23px; line-height: 1.3; letter-spacing: -.02em; margin: 0 0 18px; }
+h3 { font-size: 17px; line-height: 1.4; margin: 26px 0 12px; color: var(--accent); }
+p { margin: 12px 0; }
+section > :last-child { margin-bottom: 0; }
+section > :first-child { margin-top: 0; }
+ul, ol { padding-left: 24px; margin: 14px 0; }
+li { padding-left: 3px; margin: 9px 0; }
+code { font: .86em/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; background: #edf3f4; color: #164550; border-radius: 4px; padding: 2px 5px; overflow-wrap: anywhere; }
+pre { border: 1px solid #d9e7e9; border-left: 3px solid #24808a; background: #f4f8f9; border-radius: 5px; padding: 18px 20px; overflow-x: auto; line-height: 1.65; }
+.formula { margin: 16px 0; padding: 16px 18px; border-left: 3px solid #24808a; background: #f4f8f9; font: 17px/1.8 Georgia, "Times New Roman", serif; overflow-x: auto; }
+details { margin: 18px 0; padding: 14px 18px; border: 1px solid var(--line); border-radius: 7px; }
+summary { cursor: pointer; color: var(--accent); font-weight: 650; }
+pre code { background: transparent; padding: 0; border-radius: 0; overflow-wrap: normal; }
+.table-wrap { overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: 7px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.6; }
+th, td { padding: 12px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { background: #edf4f5; font-weight: 700; }
+td:first-child { font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:nth-child(even) { background: #fafcfc; }
+#inference-and-comparison table { min-width: 570px; }
+footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; max-width: 850px; gap: 20px; padding: 24px 20px 40px; }
+  .sidebar { position: static; max-height: none; padding: 0; }
+  .sidebar-title { display: none; }
+  nav { display: flex; overflow-x: auto; gap: 5px; padding: 12px 0 6px; }
+  nav a { white-space: nowrap; background: white; border: 1px solid var(--line); }
+  .back { margin: 8px 0 0; }
+}
+@media (max-width: 560px) {
+  body { font-size: 15px; }
+  .layout { padding: 18px 12px 30px; }
+  header { padding: 28px 22px; }
+  section { padding: 24px 19px; }
+  .summary { gap: 7px; }
+  .summary div { padding: 14px 10px; }
+  .summary strong { font-size: 21px; }
+  th, td { padding: 10px; }
+  pre { padding: 14px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media print {
+  @page { margin: 16mm; }
+  body { background: white; font-size: 10pt; }
+  .layout { display: block; max-width: none; padding: 0; }
+  .sidebar, .skip, .summary { display: none; }
+  header { background: white; color: var(--ink); padding: 0 0 18px; border-radius: 0; border-bottom: 2px solid var(--line); }
+  header p, .metadata, .eyebrow { color: var(--muted); }
+  h1 { font-size: 28pt; }
+  section { border: 0; border-radius: 0; padding: 16px 0; margin: 0; }
+  h2, h3 { break-after: avoid; }
+  pre, tr { break-inside: avoid; }
+  pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .table-wrap { overflow: visible; }
+  table { font-size: 9pt; }
+  #inference-and-comparison table { min-width: 0; }
+  details { border: 0; padding: 0; }
+  details > * { display: block !important; }
+  a { color: inherit; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#plan">Skip to experiment plan</a>
+<div class="layout">
+<aside class="sidebar">
+<div class="brand">Flow Matching One</div>
+<div class="sidebar-title">Experiment 02</div>
+<nav aria-label="Plan sections"><a href="#question"><span>01</span>Question</a>
+<a href="#settings"><span>02</span>Settings</a>
+<a href="#data"><span>03</span>Data</a>
+<a href="#brightness"><span>04</span>Brightness</a>
+<a href="#model-and-objective"><span>05</span>Model and objective</a>
+<a href="#training-timestep-sampling"><span>06</span>Training timestep sampling</a>
+<a href="#inference-and-comparison"><span>07</span>Inference and comparison</a>
+<a href="#training-budget"><span>08</span>Training budget</a>
+<a href="#wandb-logging"><span>09</span>W&amp;B logging</a>
+<a href="#evaluation"><span>10</span>Evaluation</a>
+<a href="#implementation-sequence"><span>11</span>Implementation sequence</a>
+<a href="#review-items"><span>12</span>Review items</a></nav>
+<a class="back" href="../README.md">Project document index ↗</a>
+</aside>
+<main id="plan">
+<header>
+<div class="eyebrow">Experiment 02 / Research plan</div>
+<h1>Brightness flow matching</h1>
+<p>Start with a clean ImageNet image. Learn to reach its brightness-adjusted version with SiT-S, then compare training timestep coverage and inference cost.</p>
+<div class="metadata">Date: 2026-10-21. Status: experiment planning.</div>
+</header>
+<div aria-label="Comparison overview" class="summary">
+<div><strong>SiT-S/2</strong><span>From scratch · frozen VAE</span></div>
+<div><strong>4 × 3</strong><span>Training settings × inference NFEs</span></div>
+<div><strong>−1 to +1</strong><span>Exposure range in stops</span></div>
+</div>
+<section id="question"><h2>Question</h2>
+<p>Train SiT-S to transform clean ImageNet images to their requested exposure. Compare four training timestep settings at NFE 1, 4, and 16, measuring image accuracy, brightness error, and spatial error.</p>
+</section>
+<section id="settings"><h2>Settings</h2>
+<div aria-label="settings table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Item</th>
+<th scope="col">Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model</td>
+<td>SiT-S/2, trained from scratch; 12 blocks, width 384, 6 attention heads.</td>
+</tr>
+<tr>
+<td>Dataset</td>
+<td><code>/data/hkzhang/imagenet_raw</code>: 1,281,167 training images and 50,000 validation images.</td>
+</tr>
+<tr>
+<td>Representation</td>
+<td>Frozen pretrained VAE; 256 × 256 RGB images become 4 × 32 × 32 latents.</td>
+</tr>
+<tr>
+<td>Pair</td>
+<td>Source image → the same image with a sampled exposure adjustment.</td>
+</tr>
+<tr>
+<td>Condition</td>
+<td>Scalar exposure in stops.</td>
+</tr>
+<tr>
+<td>Training timestep sampling</td>
+<td>Continuous, 16, 4, or 1 allowed timesteps; four separately trained models.</td>
+</tr>
+<tr>
+<td>Inference</td>
+<td>Euler integration with NFE 1, 4, or 16; twelve comparison cells.</td>
+</tr>
+<tr>
+<td>Proposed batch / budget</td>
+<td>Global batch 1024; 25,000 updates per run; seed 0.</td>
+</tr>
+<tr>
+<td>Tracking</td>
+<td>Local logs and W&amp;B 16 comparison previews at every validation.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Model, dataset, VAE use, online pairs, comparison axes, and W&amp;B tracking are selected. Exposure settings and training defaults below are proposals for review.</p>
+</section>
+<section id="data"><h2>Data</h2>
+<h3 id="files">Files</h3>
+<div aria-label="data table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Split</th>
+<th scope="col">Path</th>
+<th scope="col">Images</th>
+<th scope="col">Class folders</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Training</td>
+<td><code>/data/hkzhang/imagenet_raw/train</code></td>
+<td>1,281,167</td>
+<td>1,000</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td><code>/data/hkzhang/imagenet_raw/val</code></td>
+<td>50,000</td>
+<td>1,000</td>
+</tr>
+</tbody>
+</table></div>
+<p>Example paths: <code>train/0000/00015464.JPEG</code>, <code>val/0000/00048480.JPEG</code>. Inspection on 2026-10-21 confirmed directory counts and sampled JPEG/RGB headers; implementation verification includes a full decode check.</p>
+<h3 id="preprocessing">Preprocessing</h3>
+<ol>
+<li>Decode RGB, apply EXIF orientation, resize the shorter side to 256 with antialiased bicubic interpolation, and center-crop 256 × 256.</li>
+<li>Convert to FP32 sRGB in [0,1]. Apply a shared random horizontal flip with probability 0.5 during training.</li>
+<li>Sample exposure independently for each image presentation and build its target in memory after preprocessing. Keep the source dataset read-only; record relative-path manifests and hashes.</li>
+</ol>
+<h3 id="validation">Validation</h3>
+<div aria-label="data table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Stage</th>
+<th scope="col">Images</th>
+<th scope="col">Exposures</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Training monitor</td>
+<td>Fixed 1,000-image validation subset, one image per class.</td>
+<td>−1, 0, +1 stops; NFE 1.</td>
+</tr>
+<tr>
+<td>W&amp;B previews</td>
+<td>Fixed 16 source/exposure cases from the monitor subset.</td>
+<td>Cover all nine final exposure values; NFE 1 during training.</td>
+</tr>
+<tr>
+<td>Final evaluation</td>
+<td>All 50,000 validation images, including monitored images.</td>
+<td>Nine exposure values × NFE 1, 4, 16.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Reuse the same monitor and preview cases across runs. Final results report performance on the full validation set; references are regenerated in memory, with comparison previews recorded in W&amp;B.</p>
+</section>
+<section id="brightness"><h2>Brightness</h2>
+<p>Use <strong>linear-light exposure</strong>, sampled uniformly from <strong>−1 to +1 stops</strong>. One stop doubles intensity, −1 stop halves it, and zero preserves the source.</p>
+<div aria-label="brightness table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Symbol</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x₀, x₁</td>
+<td>Source and brightness-adjusted reference images; sRGB values in [0,1].</td>
+</tr>
+<tr>
+<td>e</td>
+<td>Exposure in stops.</td>
+</tr>
+<tr>
+<td>L, S</td>
+<td>sRGB → linear-light conversion and its inverse.</td>
+</tr>
+<tr>
+<td>s, l</td>
+<td>One sRGB channel value and one linear-light channel value.</td>
+</tr>
+</tbody>
+</table></div>
+<div aria-label="brightness table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Conversion</th>
+<th scope="col">Low-value branch</th>
+<th scope="col">Other values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L(s)</td>
+<td>s / 12.92 for s ≤ 0.04045</td>
+<td>((s + 0.055) / 1.055)<sup>2.4</sup></td>
+</tr>
+<tr>
+<td>S(l)</td>
+<td>12.92l for l ≤ 0.0031308</td>
+<td>1.055l<sup>1/2.4</sup> − 0.055</td>
+</tr>
+</tbody>
+</table></div>
+<p>Apply exposure in linear light, clip values to [0,1], then convert back:</p>
+<div aria-label="Exposure transformation" class="formula" role="math">x₁ = S(clip(2<sup>e</sup> L(x₀), 0, 1))</div>
+<p>Transfer functions: <a href="https://registry.color.org/rgb-registry/srgb">ICC sRGB registry</a>.</p>
+<div aria-label="brightness table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Setting</th>
+<th scope="col">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Training exposure</td>
+<td>Uniform sampling over [−1,1], independently per image presentation.</td>
+</tr>
+<tr>
+<td>Final exposure grid</td>
+<td>−1, −0.75, −0.5, −0.25, 0, 0.25, 0.5, 0.75, 1.</td>
+</tr>
+<tr>
+<td>Condition tensor</td>
+<td>FP32, shape [batch,1]; fixed throughout each inference trajectory.</td>
+</tr>
+<tr>
+<td>Target precision</td>
+<td>FP32; targets constructed in memory.</td>
+</tr>
+<tr>
+<td>Highlight saturation</td>
+<td>Track reference RGB values where pre-clipping linear intensity reaches 1; report their fraction and error separately.</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="model-and-objective"><h2>Model and objective</h2>
+<div aria-label="model and objective table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Component</th>
+<th scope="col">Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backbone</td>
+<td><a href="https://github.com/willisma/SiT/blob/main/models.py">Official SiT-S/2</a>; 2 × 2 latent patches, 256 tokens.</td>
+</tr>
+<tr>
+<td>Exposure embedding</td>
+<td>Scalar MLP: 1 → 384 → 384, with SiLU; added to the timestep embedding.</td>
+</tr>
+<tr>
+<td>Network inputs</td>
+<td>Current latent state, timestep, and exposure.</td>
+</tr>
+<tr>
+<td>Output</td>
+<td>Four velocity channels.</td>
+</tr><tr><td>Condition dropout / guidance</td><td>Disabled.</td></tr>
+<tr>
+<td>Trainable weights</td>
+<td>SiT backbone and exposure embedding, initialized from scratch.</td>
+</tr>
+<tr>
+<td>VAE</td>
+<td>Frozen <code>stabilityai/sd-vae-ft-ema</code>; deterministic posterior means, latent scale 0.18215; pin the revision.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Encode source and target online, interpolate their latents, then train the predicted velocity against their displacement. Average the squared velocity error over batch, channels, and spatial positions.</p>
+<div aria-label="model and objective table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Symbol</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>μ<sub>E</sub>, D</td>
+<td>VAE posterior-mean encoder and decoder.</td>
+</tr>
+<tr>
+<td>α</td>
+<td>Latent scale, 0.18215; follows the <a href="https://github.com/willisma/SiT/blob/main/train.py">official SiT trainer</a>.</td>
+</tr>
+<tr>
+<td>z₀, z₁</td>
+<td>Encoded source and reference latents.</td>
+</tr>
+<tr>
+<td>t, z<sub>t</sub></td>
+<td>Sampled interpolation timestep and intermediate latent.</td>
+</tr>
+<tr>
+<td>u, v<sub>θ</sub></td>
+<td>Reference displacement and predicted velocity.</td>
+</tr>
+</tbody>
+</table></div>
+<div aria-label="Latent endpoints and velocity training" class="formula" role="math">z₀ = α μ<sub>E</sub>(2x₀ − 1)  ;  z₁ = α μ<sub>E</sub>(2x₁ − 1)<br/>z<sub>t</sub> = (1 − t)z₀ + tz₁  ;  u = z₁ − z₀<br/>Loss = average[(v<sub>θ</sub>(z<sub>t</sub>, t, e) − u)²]</div>
+</section>
+<section id="training-timestep-sampling"><h2>Training timestep sampling</h2>
+<p>Timestep <strong>t</strong> records interpolation progress: <strong>0 = clean source</strong>, <strong>1 = adjusted target</strong>. Training duration is specified under <a href="#training-budget">Training budget</a>.</p>
+<p>Sample one timestep per image presentation. <strong>K</strong> is the number of allowed timesteps; every model receives the same image and update budget.</p>
+<div aria-label="training timestep sampling table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Setting</th>
+<th scope="col">Sampling</th>
+<th scope="col">Allowed timesteps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Continuous</td>
+<td>Uniform on [0,1).</td>
+<td>Any value in [0,1).</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Uniformly choose one of 16 values.</td>
+<td>0, 1/16, …, 15/16.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Uniformly choose one of 4 values.</td>
+<td>0, 1/4, 1/2, 3/4.</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Always choose 0.</td>
+<td>0.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The discrete grids use Euler's left endpoints. Retain the same real-valued timestep embedding in every model.</p>
+<div aria-label="training timestep sampling table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Comparison setting</th>
+<th scope="col">Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Random streams</td>
+<td>Separate initialization, data/augmentation, exposure, and timestep streams; share their seeds across runs.</td>
+</tr>
+<tr>
+<td>Paired time sampling</td>
+<td>Draw a shared uniform value for every example; continuous training uses it directly, finite grids round it down to their left endpoint. Consume the draw in the K=1 run as well.</td>
+</tr>
+<tr>
+<td>K=1 model</td>
+<td>Learns the source-to-target residual directly; its one-step result is the direct-regression baseline.</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="inference-and-comparison"><h2>Inference and comparison</h2>
+<p>Encode the source, apply equal Euler updates, then decode the final latent. Keep the requested exposure fixed throughout the trajectory.</p>
+<div aria-label="inference and comparison table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Symbol</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N</td>
+<td>Number of velocity-network evaluations (NFE): 1, 4, or 16.</td>
+</tr>
+<tr>
+<td>j, t<sub>j</sub></td>
+<td>Update index 0,…,N−1 and its timestep j/N.</td>
+</tr>
+<tr>
+<td>ẑ<sub>j</sub></td>
+<td>Predicted latent after j updates; starts at z₀.</td>
+</tr>
+<tr>
+<td>x̂</td>
+<td>Generated RGB image, clipped to [0,1].</td>
+</tr>
+</tbody>
+</table></div>
+<div aria-label="Euler inference" class="formula" role="math">ẑ₀ = z₀  ;  t<sub>j</sub> = j/N<br/>ẑ<sub>j+1</sub> = ẑ<sub>j</sub> + v<sub>θ</sub>(ẑ<sub>j</sub>, t<sub>j</sub>, e)/N<br/>x̂ = clip((D(ẑ<sub>N</sub>/α) + 1)/2, 0, 1)</div>
+<div aria-label="inference and comparison table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Training timestep setting</th>
+<th scope="col">NFE 1</th>
+<th scope="col">NFE 4</th>
+<th scope="col">NFE 16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Continuous</td>
+<td>Boundary t=0</td>
+<td>Continuous field</td>
+<td>Continuous field</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Supervised grid</td>
+<td>Supervised grid</td>
+<td>Supervised grid</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Supervised grid</td>
+<td>Supervised grid</td>
+<td>Includes unsupervised timesteps</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Supervised grid</td>
+<td>Includes unsupervised timesteps</td>
+<td>Includes unsupervised timesteps</td>
+</tr>
+</tbody>
+</table></div>
+<p>Evaluate all twelve cells at the actual Euler timesteps. Flag cells that include unsupervised discrete timesteps; their error includes generalization beyond the training grid.</p>
+</section>
+<section id="training-budget"><h2>Training budget</h2>
+<p><strong>Proposed global batch: 1024.</strong> Assess throughput, memory, and validation RMSE in the pilot, then fix one batch and learning rate for all four models.</p>
+<div aria-label="training budget table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Setting</th>
+<th scope="col">Proposed default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Seed</td>
+<td>0; shared model initialization.</td>
+</tr>
+<tr>
+<td>Global batch</td>
+<td>1024 = per-device microbatch × GPU processes × gradient accumulation; example: 64 × 4 × 4.</td>
+</tr>
+<tr>
+<td>Training budget</td>
+<td>25,000 updates × 1024 images = 25.6M image presentations, approximately 20 dataset passes.</td>
+</tr>
+
+<tr>
+<td>Optimizer</td>
+<td>AdamW; learning rate 10<sup>−4</sup>, betas (0.9,0.999), weight decay 0; constant rate.</td>
+</tr><tr><td>Gradient clipping</td><td>Disabled.</td></tr>
+<tr>
+<td>Precision</td>
+<td>BF16 transformer computation; FP32 parameters, exposure construction, interpolation/loss accumulation, and metrics; frozen VAE in FP32 initially.</td>
+</tr>
+<tr>
+<td>Weight average (EMA)</td>
+<td>Decay 0.9996 per optimizer update; evaluate final averaged weights.</td>
+</tr>
+<tr>
+<td>Scalar logging</td>
+<td>Every 100 updates; local logs and W&amp;B.</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>Every 2,500 updates and at completion, combining coincident events; monitor at NFE 1 and log 16 previews.</td>
+</tr>
+<tr>
+<td>Checkpoints</td>
+<td>Every 2,500 updates and completion; model, EMA, optimizer, RNG streams, sampler position, update count, and W&amp;B run ID.</td>
+</tr>
+<tr>
+<td>Pilot</td>
+<td>Compare batch 256 and 1024 at equal image counts; record speed, memory, and validation RMSE.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Use Accelerate with configurable GPU processes, microbatch, and accumulation. Full training uses GPUs; CPU supports lightweight verification. Record resolved settings, image count, and wall time for every run.</p>
+</section>
+<section id="wandb-logging"><h2>W&amp;B logging</h2>
+<h3 id="authentication-and-settings">Authentication and settings</h3>
+<p>W&amp;B authenticates with an <strong>API key</strong> supplied through the runtime environment. The YAML entry records the environment variable name; the credential value stays in the environment.</p>
+<div aria-label="wandb logging table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Entry</th>
+<th scope="col">Planned value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wandb.enabled</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>wandb.project</code></td>
+<td><code>imagenet-brightness-flow</code></td>
+</tr>
+<tr>
+<td><code>wandb.entity</code></td>
+<td><code>&lt;your-user-or-team&gt;</code></td>
+</tr>
+<tr>
+<td><code>wandb.group</code></td>
+<td><code>&lt;comparison-name&gt;</code></td>
+</tr>
+<tr>
+<td><code>wandb.mode</code></td>
+<td><code>online</code></td>
+</tr>
+<tr>
+<td><code>wandb.api_key_env</code></td>
+<td><code>WANDB_API_KEY</code></td>
+</tr>
+<tr>
+<td><code>wandb.images_per_validation</code></td>
+<td><code>16</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Runtime credential entry:</p>
+<pre><code class="language-bash">export WANDB_API_KEY="&lt;your-wandb-api-key&gt;"
+</code></pre>
+<p>The API-key variable follows the <a href="https://github.com/wandb/wandb/blob/main/wandb/env.py">W&amp;B SDK environment settings</a>. Verify authentication during the pilot; store environment-variable names in run settings and redact credential values from logs and snapshots.</p>
+<h3 id="run-records">Run records</h3>
+<div aria-label="wandb logging table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Record</th>
+<th scope="col">Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run grouping</td>
+<td>One run per training timestep setting; four runs in the same comparison group.</td>
+</tr>
+<tr>
+<td>Training scalars</td>
+<td>Velocity loss, learning rate, optimizer update, processed images, images/second, elapsed time, ETA, and peak GPU memory.</td>
+</tr>
+<tr>
+<td>Validation scalars</td>
+<td>RGB/luminance/identity/latent RMSE and luminance error components, overall and by monitored exposure.</td>
+</tr>
+<tr>
+<td>Axes</td>
+<td>Optimizer updates and processed-image counts.</td>
+</tr>
+<tr>
+<td>Resume</td>
+<td>Preserve the W&amp;B run ID and append logs from the restored update.</td>
+</tr>
+<tr>
+<td>Distributed logging</td>
+<td>Main process logs globally aggregated scalars and shared previews.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="sixteen-validation-previews">Sixteen validation previews</h3>
+<p>Select <strong>16 fixed source/exposure cases</strong> once and reuse them across runs and validation events. Cover all nine exposure values; each <a href="https://docs.wandb.ai/ref/python/data-types/image/">W&amp;B image</a> is one panel containing <strong>source | reference | generated output</strong>.</p>
+<p>Log 16 panels at every training validation, with the source path, exposure, NFE, and optimizer update in the captions. Final evaluation logs the same 16 cases for each NFE under separate keys; image metrics use FP32 tensors, while previews use uint8 RGB values in [0,255].</p>
+</section>
+<section id="evaluation"><h2>Evaluation</h2>
+<p>Generate from each validation source at the requested exposure and compare with the reference produced by the defined brightness operation.</p>
+<div aria-label="evaluation table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Item</th>
+<th scope="col">Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Images</td>
+<td>All 50,000 validation images, including the monitor subset.</td>
+</tr>
+<tr>
+<td>Exposures</td>
+<td>Nine values from −1 to +1 stops.</td>
+</tr>
+<tr>
+<td>Per comparison cell</td>
+<td>50,000 × 9 = 450,000 source/exposure pairs.</td>
+</tr>
+<tr>
+<td>Complete sweep</td>
+<td>Twelve cells: 5.4M output comparisons and 37.8M per-image velocity evaluations.</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>Stream batches and accumulate scalar statistics; reuse fixed data and preprocessing across cells.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="total-image-error">Total image error</h3>
+<p><strong>RMSE</strong> is the typical matching-value error: square the differences, average them, and take the square root. Smaller is better; zero is an exact match.</p>
+<div aria-label="evaluation table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Metric</th>
+<th scope="col">Comparison</th>
+<th scope="col">Scale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RGB RMSE — primary</td>
+<td>Matching red, green, and blue values.</td>
+<td>Normalized sRGB [0,1]; overall image and color mismatch.</td>
+</tr>
+<tr>
+<td>Luminance RMSE</td>
+<td>Matching linear-light brightness values.</td>
+<td>Normalized luminance [0,1]; brightness-map mismatch.</td>
+</tr>
+<tr>
+<td>Identity RMSE</td>
+<td>Output versus source at zero exposure.</td>
+<td>Same scale as RGB RMSE; preservation when the target equals the source.</td>
+</tr>
+<tr>
+<td>Latent RMSE</td>
+<td>Final predicted latent versus encoded reference.</td>
+<td>Scaled VAE latent units; transport accuracy before decoding.</td>
+</tr>
+</tbody>
+</table></div>
+<div aria-label="evaluation table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Symbol</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pᵢ, qᵢ</td>
+<td>Matching reference and generated RGB values.</td>
+</tr>
+<tr>
+<td>n, Σᵢ</td>
+<td>Number of RGB values and sum over those values.</td>
+</tr>
+<tr>
+<td>R, G, B</td>
+<td>Linear-light channel values for luminance calculation.</td>
+</tr>
+</tbody>
+</table></div>
+<div aria-label="Image error and luminance" class="formula" role="math">RGB RMSE = √[(1/n) Σᵢ (qᵢ − pᵢ)²]<br/>Luminance = 0.2126R + 0.7152G + 0.0722B</div>
+<p>Luminance uses the <a href="https://www.w3.org/WAI/WCAG21/Understanding/relative-luminance.html">W3C definition</a> and the brightness section's linear-light conversion.</p>
+<h3 id="brightness-and-spatial-error">Brightness and spatial error</h3>
+<p>Fit one global gain and offset from reference luminance to generated luminance by least squares. Decompose total luminance <strong>MSE</strong> into three squared-error components, each with ideal value zero:</p>
+<div aria-label="evaluation table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Component</th>
+<th scope="col">Calculation</th>
+<th scope="col">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mean brightness</td>
+<td>Squared difference of image-average luminance.</td>
+<td>Whole-image brightness mismatch; also report the signed mean difference, positive for a brighter output.</td>
+</tr>
+<tr>
+<td>Global gain</td>
+<td>Squared gain difference from 1, multiplied by reference luminance variance.</td>
+<td>Global contrast mismatch.</td>
+</tr>
+<tr>
+<td>Remaining spatial error</td>
+<td>Average squared residual after the best gain/offset fit.</td>
+<td>Structural changes and local brightness errors.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The three components sum to total luminance MSE. Taking the square root of that total gives luminance RMSE; RGB RMSE captures color differences as well.</p>
+<details>
+<summary>Decomposition definitions</summary>
+<div aria-label="evaluation table" class="table-wrap" role="region" tabindex="0"><table>
+<thead><tr><th scope="col">Symbol</th><th scope="col">Meaning</th></tr></thead>
+<tbody>
+<tr><td>yᵢ, gᵢ, m</td><td>Reference luminance, generated luminance, and pixel count.</td></tr>
+<tr><td>μ, ν, σ²</td><td>Reference mean, generated mean, and reference variance.</td></tr>
+<tr><td>a, b</td><td>Least-squares global gain and offset.</td></tr>
+<tr><td>rᵢ</td><td>Residual: generated luminance minus its global gain/offset prediction.</td></tr>
+</tbody>
+</table></div>
+<div aria-label="Fitted global gain and spatial residual" class="formula" role="math">a = Σᵢ (yᵢ − μ)(gᵢ − ν) / Σᵢ (yᵢ − μ)²<br/>b = ν − aμ  ;  rᵢ = gᵢ − (a yᵢ + b)</div>
+<div aria-label="Three luminance error components" class="formula" role="math">Total MSE = (ν − μ)² + (a − 1)²σ² + (1/m) Σᵢ rᵢ²</div>
+<p>For reference variance ≤ 10<sup>−8</sup>, report mean-brightness error plus centered error, comparing each map after subtracting its own mean:</p>
+<div aria-label="Luminance error for nearly uniform images" class="formula" role="math">Total MSE = (ν − μ)² + (1/m) Σᵢ [(gᵢ − ν) − (yᵢ − μ)]²</div>
+<p>Accumulate in FP64; report valid gain-fit counts and nearly uniform cases separately.</p>
+</details>
+<h3 id="saturation-and-clipping">Saturation and clipping</h3>
+<div aria-label="evaluation table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Diagnostic</th>
+<th scope="col">Report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reference saturation</td>
+<td>RGB RMSE and value counts for saturated and unsaturated reference channels; empty groups marked unavailable.</td>
+</tr>
+<tr>
+<td>Display clipping</td>
+<td>Primary image metrics on output clipped to [0,1].</td>
+</tr>
+<tr>
+<td>Raw output</td>
+<td>Fraction outside [0,1] and RGB RMSE before clipping.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="reports-and-speed">Reports and speed</h3>
+<div aria-label="evaluation table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Report</th>
+<th scope="col">Calculation and presentation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Main tables</td>
+<td>4 × 3 per metric: training timestep settings × NFE 1, 4, 16; flag unsupervised-timestep cells.</td>
+</tr>
+<tr>
+<td>Overall RMSE</td>
+<td>Average per-image squared errors with equal exposure weighting, then take one square root; keep exposure-specific results as well.</td>
+</tr>
+<tr>
+<td>Error components</td>
+<td>Average MSE components over matching valid-image groups so their sums remain comparable.</td>
+</tr>
+<tr>
+<td>Figures</td>
+<td>RMSE versus NFE, error versus exposure, luminance components, monitoring curves, and the fixed W&amp;B examples.</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>Warm up and synchronize the GPU; measure integration and full source-encoding-to-output time.</td>
+</tr>
+<tr>
+<td>Cost record</td>
+<td>Milliseconds per image, batch size, images/second, hardware, and peak memory; time reference construction separately.</td>
+</tr>
+</tbody>
+</table></div>
+</section>
+<section id="implementation-sequence"><h2>Implementation sequence</h2>
+<div aria-label="implementation sequence table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Item</th>
+<th scope="col">Plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Current stage</td>
+<td>Experiment planning.</td>
+</tr>
+<tr>
+<td>Topic folder</td>
+<td><code>imagenet_brightness_flow/</code>; <code>src/</code>, <code>scripts/</code>, <code>configs/</code>, and a topic README linking here.</td>
+</tr>
+<tr>
+<td>Development level</td>
+<td>Proposed level 1; review each implementation step before the next.</td>
+</tr>
+</tbody>
+</table></div>
+<div aria-label="implementation sequence table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Step</th>
+<th scope="col">Deliverable</th>
+<th scope="col">Verification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Data manifests, preprocessing, exposure operation, metrics.</td>
+<td>Dataset counts, training/validation separation, monitor membership, known exposure values, clipping, and error decompositions.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>SiT-S conditioning, VAE pairing, loss, training, Euler sampler.</td>
+<td>Shapes, frozen VAE, online targets, timestep grids, NFE counts, small learning check, and checkpoint continuation.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Pilot, resource settings, W&amp;B, streaming validation.</td>
+<td>Equal-image batch comparison, speed/memory, matched RNG streams, distributed metrics, authentication, exactly 16 previews, and resumed W&amp;B logging.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Four-run comparison and report.</td>
+<td>Twelve cells on all 50,000 validation images; exposure strata, timestep flags, final averaged weights, and run provenance.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Follow the <a href="../coding_requirements.md">coding requirements</a> and <a href="../project_requirements.md">project requirements</a>. Store results in the topic's <code>outputs/</code>, development evidence in <code>.verification/</code>, and usage/review status in its README.</p>
+</section>
+<section id="review-items"><h2>Review items</h2>
+<div aria-label="review items table" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th scope="col">Proposed default</th>
+<th scope="col">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Resolution and representation</td>
+<td>SiT-S/2 at 256 × 256; frozen VAE posterior means.</td>
+</tr>
+<tr>
+<td>Exposure</td>
+<td>Linear-light adjustment, uniformly sampled from −1 to +1 stops.</td>
+</tr>
+<tr>
+<td>Training timestep grids</td>
+<td>Continuous or 16, 4, 1 left-endpoint values.</td>
+</tr>
+<tr>
+<td>Global batch and budget</td>
+<td>1024 and 25,000 updates; 25.6M image presentations.</td>
+</tr>
+<tr>
+<td>Validation schedule</td>
+<td>Every 2,500 updates; fixed monitor subset and 16 W&amp;B previews.</td>
+</tr>
+</tbody>
+</table></div>
+<p>W&amp;B account entry: supply the entity/team name and set the <code>WANDB_API_KEY</code> runtime variable before the pilot.</p>
+</section>
+<footer>Experiment design only · See the review items for proposed defaults.</footer>
+</main>
+</div>
+</body>
+</html>

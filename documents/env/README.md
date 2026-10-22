@@ -24,6 +24,7 @@
 - Compute builds: **cu128** default; **cu126** and **cpu** selectable; direct dependency pins: [requirements.txt](requirements.txt).
 - CUDA wheels supply the runtime; the host needs a compatible driver; custom CUDA builds additionally need a local toolkit.
 - Setup profiles cover Linux with Bash/Conda; other platforms need separate profiles.
+- Brightness experiment: W&B SDK planned; pin its version and record the installed environment during implementation. Tracking settings: [experiment plan](../experiment-02-brightness/plan.html#wandb-logging).
 
 ## Setup
 

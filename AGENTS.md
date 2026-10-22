@@ -10,7 +10,9 @@
 ## Communication
 
 - Keep chat and documents concise, clear, compact, and organized; use consistent terms and short section titles.
-- Write for readers unfamiliar with the chat; introduce concepts before formulas and prefer labeled settings, tables, and one or two sentences per item.
+- Write practical experiment notes for readers unfamiliar with the chat; use concise settings and notation tables, define symbols beside their first equation, and explain operations in plain language.
+- Explain each metric's purpose, calculation, units or scale, and how to read its value before giving its formula; prefer equations over unexplained implementation code and keep each item to one or two sentences.
+- State the intended setting or behavior directly. Resolve ambiguity by revising its name or definition; omit defensive clarification such as "it does not mean…", contrasts with unrequested alternatives, and redundant caveats.
 
 ## Workflow
 
