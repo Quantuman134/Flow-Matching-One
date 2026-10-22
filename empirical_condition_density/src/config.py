@@ -7,8 +7,8 @@ from pathlib import Path
 import yaml
 
 from .data import ConditionScheme, SpiralConfig
-from .model import ModelConfig
-from .paths import resolve_project_path
+from flow_matching.models import MLPConfig
+from .filesystem import resolve_project_path
 from .training import TrainConfig
 
 
@@ -86,7 +86,7 @@ class ExperimentConfig:
     resume: bool
     output_dir: str
     data: SpiralConfig
-    model: ModelConfig
+    model: MLPConfig
     training: dict
     condition_counts: list[int]
     seed: int
@@ -164,6 +164,6 @@ def load_config(path):
         raise ValueError("Experiment YAML must contain a mapping.")
     #endregion
     for key, cls in (("launch", LaunchConfig), ("data", SpiralConfig),
-                     ("model", ModelConfig), ("evaluation", EvaluationConfig)):
+                     ("model", MLPConfig), ("evaluation", EvaluationConfig)):
         values[key] = _construct(cls, values.get(key, {}))
     return _construct(ExperimentConfig, values)

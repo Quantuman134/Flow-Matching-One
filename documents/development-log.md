@@ -2,6 +2,51 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-22 — Step 2 review
+
+- The user approved committing brightness Step 2 and the shared toolbox refinements, and proceeding to Step 3. Updated their review status; Step 3 covers W&B, streaming validation, and the resource pilot.
+- Existing verification passed: nine toolbox/workflow checks, fourteen brightness CPU checks, real-image BF16 learning, and two-GPU launch/resume/sampling. Preserved the separate empirical-condition configuration and worker-cleanup edits outside this commit.
+
+## 2026-10-21 — Single linear interpolant
+
+- Simplified `linear_path()` to `source + t × (target−source)` with displacement `target−source`; removed the form argument and updated spiral training/validation, tests, and toolbox documentation.
+- Original spiral comparisons now use explicit FP32 tolerances for the changed arithmetic order; brightness comparisons remain exact. Current-code checkpoint continuation remains exact.
+- Validation: nine toolbox/extraction/workflow checks and fourteen brightness CPU checks passed. Confirmed active code/documentation expose one formula; syntax and whitespace checks passed. Evidence: `flow_matching/.verification/refactor/single_path_toolbox.log` and `single_path_brightness.log`.
+
+## 2026-10-21 — Module names
+
+- Renamed the flow toolbox's mathematical `paths.py` to `interpolants.py` and each experiment's filesystem `paths.py` to `filesystem.py`. Updated active imports and README references.
+- Added a coding requirement to name components by their specific responsibility, distinguish different concepts, and resolve ambiguous names by renaming and updating references.
+- Validation: nine toolbox/extraction/workflow checks and fourteen brightness CPU checks passed. Confirmed active references use the new module names; syntax and whitespace checks passed. Evidence: `flow_matching/.verification/refactor/naming_toolbox.log` and `naming_brightness.log`.
+
+## 2026-10-21 — Explicit model forwards
+
+- Kept `velocity_mse()` as an individual loss component and `flow_matching_loss()` as the objective composition entry point. The latter now receives predictions and target velocities; callers construct the path and run the model explicitly.
+- Updated both trainers, spiral validation, relevant checks, and the toolbox API example. Preserved each experiment's interpolation arithmetic, loss reduction, and FP32 loss calculations.
+- Validation: nine toolbox/extraction/workflow checks and fourteen brightness CPU checks passed, including exact original-code comparisons and checkpoint continuation. The real-image SiT/VAE BF16 learning/sampling check also passed. Evidence: `flow_matching/.verification/refactor/explicit_forward_*.log`; whitespace and call-site checks passed. The change awaits level-1 review.
+
+## 2026-10-21 — Direct toolbox calls
+
+- Removed the experiment-local model/flow modules and spiral sampler adapter: five files in total. Updated spiral imports to use the toolbox names `MLP` and `MLPConfig` directly; both experiments call shared implementations.
+- Removed the adapter-specific test and MLP column-time compatibility; shared model times consistently use `[B]`. Updated the toolbox and experiment READMEs.
+- Validation: nine toolbox/extraction/workflow checks and fourteen brightness CPU checks passed, including exact original-code comparisons and checkpoint continuation. Confirmed the five modules are absent and active experiment imports use the toolbox; syntax and whitespace checks passed. Evidence: `flow_matching/.verification/refactor/cleanup_toolbox.log` and `cleanup_brightness.log`.
+
+## 2026-10-21 — Shared flow matching toolbox
+
+- Created `flow_matching/` with MLP/SiT models, linear paths, explicit loss reductions, timestep sampling, and Euler integration. Both experiments now import the shared components directly; experiment-local modules provide compatibility imports/adapters. Dataset/VAE handling, pair construction, training orchestration, and metrics remain in the experiment folders.
+- Standardized shared timesteps to `[B]` and sampler results to `SamplingResult`. Preserved spiral's summed coordinate error and weighted-sum interpolation, brightness's elementwise mean error and displacement interpolation, model parameter names, seeded initialization, and legacy call forms. Moved SiT attribution to the toolbox and linked its API from the topic READMEs and document index.
+- Validation: ten toolbox checks passed, including exact pre-extraction comparisons of initialization, loss, gradients, optimizer updates, Euler outputs/trajectories, and timestep RNG states, plus spiral training/evaluation and checkpoint continuation. Fourteen brightness CPU checks and both real-model/two-GPU checks passed; evidence: `flow_matching/.verification/refactor/`. Python syntax, local document links, and whitespace checks passed.
+- Environment unchanged. The toolbox extraction awaits level-1 review; W&B and streaming validation remain in brightness Step 3.
+
+## 2026-10-21 — Brightness Step 2
+
+- Deleted the accidental `ne` pager-help file and committed reviewed Step 1 as `d6d853f`, retaining unrelated empirical-condition edits outside that commit. The user approved proceeding to Step 2.
+- Added PyTorch SiT-S/2 with scalar exposure conditioning, frozen revision-pinned VAE posterior means, online latent pairs, flow-matching loss, and Euler NFE 1/4/16. Added YAML-driven Bash/Python entry points, Accelerate accumulation, FP32 EMA, persistent logs, run/environment records, and complete-checkpoint markers with run-relative artifact references.
+- Separated data, augmentation, exposure, and timestep streams; consumed uniform timestep draws for K=1. Worker prefetch uses a private cursor, preserving exact continuation from the committed sample position.
+- Environment: the user approved installing diffusers 0.35.1 and missing dependencies; installed importlib_metadata 9.0.1, regex 2026.9.29, and zipp 4.1.2. `pip check` passed; recorded the install report and refreshed local environment snapshots. Existing PyTorch packages were retained.
+- Validation: fourteen focused CPU tests passed, including exact model/EMA/optimizer continuation with two prefetch workers. Full SiT-S (32,623,120 parameters), cached VAE, and two actual 256 × 256 ImageNet sources passed a 40-update learning check: velocity MSE 0.1068 → 0.0382 (last-five mean); NFE 1/4/16 outputs were finite. Corrected the conditioning fixture to reuse the same source/time across different exposures so it tests dependence on exposure.
+- Two-GPU BF16 Bash launch from `/tmp` with spaced paths passed; relocated checkpoint resume advanced from update 2 to 3, and the sampling entry point produced a 32 × 32 RGB image. Evidence: `imagenet_brightness_flow/.verification/step2_checks/`. Step 2 awaits review; Step 3 covers W&B, validation, and the resource pilot.
+
 ## 2026-10-21 — Runtime data workflow
 
 - Verified integer-size resizing against torchvision's runtime implementation; retained the integer form at the user's request. The preprocessing test passed, and integer/list forms produced identical portrait, landscape, and square results.

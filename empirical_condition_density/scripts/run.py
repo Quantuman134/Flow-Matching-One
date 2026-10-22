@@ -30,8 +30,8 @@ from empirical_condition_density.src.config import load_config
 from empirical_condition_density.src.data import ConditionScheme, build_spiral
 from empirical_condition_density.src.evaluation import evaluate_model, evaluation_complete, save_arrays, write_json
 from empirical_condition_density.src.metrics import GeometryMetrics
-from empirical_condition_density.src.model import ConditionalMLP
-from empirical_condition_density.src.paths import REPO_ROOT
+from flow_matching.models import MLP
+from empirical_condition_density.src.filesystem import REPO_ROOT
 from empirical_condition_density.src.reporting import export_figures, export_tables
 from empirical_condition_density.src.training import train
 
@@ -173,7 +173,7 @@ def run(config_path):
                     rows.extend(json.loads((folder / "metrics.json").read_text()))
                     logger.info("Reusing evaluation | K=%s | seed=%s", count, seed)
                 else:
-                    model = ConditionalMLP(config.model).to(accelerator.device)
+                    model = MLP(config.model).to(accelerator.device)
                     model.load_state_dict(load_file(str(weights), device=str(accelerator.device)))
                     rows.extend(evaluate_model(
                         model, data, ConditionScheme(len(data.targets), count),

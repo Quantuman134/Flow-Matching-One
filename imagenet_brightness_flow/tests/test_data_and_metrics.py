@@ -18,7 +18,7 @@ from imagenet_brightness_flow.src.indexing import (
     ImageRecord, fingerprint_records, scan_split, select_per_class, select_previews,
 )
 from imagenet_brightness_flow.src.metrics import image_errors, latent_mse, luminance_decomposition
-from imagenet_brightness_flow.src.paths import TOPIC_ROOT
+from imagenet_brightness_flow.src.filesystem import TOPIC_ROOT
 
 
 class DataAndMetricTests(unittest.TestCase):

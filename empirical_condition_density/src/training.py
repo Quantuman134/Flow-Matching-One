@@ -18,9 +18,10 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed
 
 from .data import ConditionScheme, PairBatch, SpiralConfig, build_spiral, sample_pairs
-from .flow import flow_matching_loss
-from .model import ConditionalMLP, ModelConfig
-from .paths import REPO_ROOT, resolve_checkpoint_path, resolve_project_path
+from flow_matching.losses import flow_matching_loss
+from flow_matching.models import MLP, MLPConfig
+from flow_matching.interpolants import linear_path
+from .filesystem import REPO_ROOT, resolve_checkpoint_path, resolve_project_path
 
 
 @dataclass(frozen=True)
@@ -68,7 +69,7 @@ class TrainConfig:
 
 @dataclass(frozen=True)
 class TrainingResult:
-    model: ConditionalMLP
+    model: MLP
     step: int
     run_dir: Path
     checkpoint: Path
@@ -104,10 +105,12 @@ def _validate(model, batch, times, reference, accelerator):
     model.eval()
     try:
         with torch.autocast(device_type=accelerator.device.type, enabled=False):
-            loss = flow_matching_loss(
-                model, x0, x1, times[selection].to(accelerator.device), condition,
-            )
-            endpoint = x0 + model(x0, torch.zeros_like(condition), condition)
+            local_times = times[selection].to(accelerator.device)
+            position, target_velocity = linear_path(x0, x1, local_times)
+            prediction = model(position, local_times, condition)
+            loss = flow_matching_loss(prediction, target_velocity, reduction="sum_per_sample")
+            initial_times = torch.zeros(len(x0), dtype=torch.float32, device=x0.device)
+            endpoint = x0 + model(x0, initial_times, condition)
             squared_error = (endpoint - reference[selection].to(accelerator.device))
             squared_error = squared_error.square().sum(dim=1).mean()
         values = accelerator.reduce(torch.stack((loss, squared_error)), reduction="mean")
@@ -147,7 +150,7 @@ def _provenance(accelerator):
 
 def train(
     config: TrainConfig = TrainConfig(), *,
-    model_config: ModelConfig = ModelConfig(),
+    model_config: MLPConfig = MLPConfig(),
     spiral_config: SpiralConfig = SpiralConfig(),
     resume_from: str | Path | None = None,
 ) -> TrainingResult:
@@ -212,11 +215,11 @@ def train(
     validation_rng = torch.Generator(device="cpu").manual_seed((config.seed + 1) % 2**32)
     validation_batch = sample_pairs(data, scheme, config.validation_batch_size, validation_rng)
     validation_times = torch.rand(
-        config.validation_batch_size, 1, generator=validation_rng,
+        config.validation_batch_size, generator=validation_rng,
         dtype=torch.float32, device="cpu",
     )
     reference = scheme.group_means(data.targets)[scheme.group_indices(validation_batch.target_indices)]
-    model = ConditionalMLP(model_config)
+    model = MLP(model_config)
     optimizer = torch.optim.Adam(
         model.parameters(), lr=config.learning_rate, betas=config.adam_betas,
         eps=config.adam_eps, weight_decay=config.weight_decay,
@@ -292,7 +295,7 @@ def train(
         while state.step < config.num_steps:
             batch = sample_pairs(data, scheme, config.global_batch_size, state.generator)
             times = torch.rand(
-                config.global_batch_size, 1, generator=state.generator,
+                config.global_batch_size, generator=state.generator,
                 dtype=torch.float32, device="cpu",
             )
             step_loss = torch.zeros((), dtype=torch.float32, device=accelerator.device)
@@ -305,9 +308,10 @@ def train(
                 with accelerator.accumulate(model), torch.autocast(
                     device_type=accelerator.device.type, enabled=False,
                 ):
-                    loss = flow_matching_loss(
-                        model, x0, x1, times[selection].to(accelerator.device), condition,
-                    )
+                    local_times = times[selection].to(accelerator.device)
+                    position, target_velocity = linear_path(x0, x1, local_times)
+                    prediction = model(position, local_times, condition)
+                    loss = flow_matching_loss(prediction, target_velocity, reduction="sum_per_sample")
                     step_loss += loss.detach() / config.gradient_accumulation_steps
                     # Accelerate scales accumulated gradients and synchronizes the last microbatch.
                     accelerator.backward(loss)

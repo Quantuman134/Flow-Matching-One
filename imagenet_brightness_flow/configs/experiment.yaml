@@ -16,3 +16,30 @@ data:
 
 metrics:
   flat_variance_threshold: 1.0e-8
+
+vae:
+  model_id: stabilityai/sd-vae-ft-ema
+  revision: f04b2c4b98319346dad8c65879f680b1997b204a
+  scale: 0.18215
+  batch_size: 16
+  local_files_only: true
+
+training:
+  timesteps: continuous
+  updates: 25000
+  global_batch: 1024
+  microbatch: 64
+  accumulation: 4
+  processes: 4
+  device: cuda
+  mixed_precision: bf16
+  workers: 4
+  cpu_threads: 2
+  learning_rate: 1.0e-4
+  adam_betas: [0.9, 0.999]
+  weight_decay: 0.0
+  ema_decay: 0.9996
+  log_interval: 100
+  checkpoint_interval: 2500
+  output_dir: imagenet_brightness_flow/outputs/continuous-seed0
+  resume_from: null

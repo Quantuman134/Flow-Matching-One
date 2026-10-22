@@ -14,11 +14,14 @@
 | Matplotlib / PyYAML | 3.10.6 / 6.0.2 |
 | Accelerate | 1.10.1 |
 | huggingface-hub / safetensors | 0.34.4 / 0.6.2 |
+| diffusers | 0.35.1 |
+| importlib_metadata / regex / zipp | 9.0.1 / 2026.9.29 / 4.1.2 |
 | gpustat | 1.1.1 |
 
 - NumPy: installed **2.4.6**, planned **2.2.6**; no downgrade performed; SciPy accepts the installed version.
 - Observed snapshots: `local/flow-matching-one/environment.yml` and `requirements.lock.txt`; ignored by Git.
 - Brightness Step 1 observed torchvision/Pillow versions above and passed CPU/CUDA data checks; planned Pillow remains 11.3.0 in the baseline pins. Verification evidence records the tested versions.
+- Brightness Step 2: the user approved installing diffusers and its missing dependencies. The versions above passed `pip check`, cached-VAE encoding, SiT-S learning/sampling, and two-GPU training/resume checks. Installation report: `imagenet_brightness_flow/.verification/step2_checks/install-report.json`.
 
 ## Planned baseline
 

@@ -21,7 +21,7 @@ if __package__ is None or __package__ == "":
     sys.path.insert(0, repository_path)
 
 from empirical_condition_density.src.config import load_config
-from empirical_condition_density.src.paths import REPO_ROOT
+from empirical_condition_density.src.filesystem import REPO_ROOT
 
 
 def launch(path):

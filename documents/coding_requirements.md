@@ -2,6 +2,7 @@
 
 ## Code style
 
+- Name files, modules, functions, and variables for their specific responsibility. Give different concepts distinct names; resolve ambiguous names by renaming them and updating references.
 - Add concise docstrings and necessary comments for responsibilities, shapes, mathematical choices, and non-obvious behavior; avoid narrating obvious code.
 - Group nearby lines serving one purpose into logical blocks; separate blocks with a blank line.
 - Prefer explicit, step-by-step code with descriptive intermediate variables; keep each statement focused on one operation.

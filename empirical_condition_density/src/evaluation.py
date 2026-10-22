@@ -14,7 +14,7 @@ import yaml
 from .config import EvaluationConfig
 from .data import ConditionScheme, SpiralData
 from .metrics import GeometryMetrics, endpoint_rmse
-from .sampling import sample_euler
+from flow_matching.samplers import euler_sample
 
 
 def write_json(path: Path, value):
@@ -54,7 +54,7 @@ def generate(model, noise, conditions, steps, batch_size):
         batch_noise = batch_noise.to(device)
         batch_conditions = batch_conditions.to(device)
 
-        result = sample_euler(model, batch_noise, batch_conditions, steps)
+        result = euler_sample(model, batch_noise, batch_conditions, steps, matmul_precision="highest")
         cpu_samples = result.samples.cpu()
         chunks.append(cpu_samples)
 
@@ -299,9 +299,9 @@ def evaluate_model(
     trajectory_conditions = conditions[selection]
     trajectory_noise = trajectory_noise.to(device)
     trajectory_conditions = trajectory_conditions.to(device)
-    trajectories = sample_euler(
+    trajectories = euler_sample(
         model, trajectory_noise, trajectory_conditions,
-        config.trajectory_steps, return_trajectory=True,
+        config.trajectory_steps, return_trajectory=True, matmul_precision="highest",
     )
 
     positions_cpu = trajectories.trajectory.cpu()

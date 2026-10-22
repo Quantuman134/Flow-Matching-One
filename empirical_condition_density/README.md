@@ -33,10 +33,10 @@ empirical_condition_density/
 | File | Responsibility |
 | --- | --- |
 | `src/data.py` / `src/visualize.py` | Fixed in-memory spiral, conditions, fresh pairs, and analytic reference figure. |
-| `src/model.py` / `src/flow.py` / `src/sampling.py` | Conditional MLP, linear-path velocity loss, and Euler integration. |
+| `flow_matching.models`, `.losses`, `.samplers` | Shared conditional MLP, velocity loss, and Euler integration; [toolbox API](../flow_matching/README.md). |
 | `src/training.py` | FP32 Accelerate training, fixed validation, records, and resume. |
 | `src/config.py` | Load and validate YAML into dataclasses; Python defaults are fallbacks. |
-| `src/paths.py` | Resolve repository-relative outputs and resume paths independently of the working directory. |
+| `src/filesystem.py` | Resolve repository-relative outputs and resume paths independently of the working directory. |
 | `scripts/run.sh` | Select the Conda environment and call `scripts/launch.py`. |
 | `scripts/launch.py` | Validate resources and start `scripts/run.py` directly or through torchrun. |
 | `scripts/run.py` | Train or reuse each K model, evaluate final weights, and export results. |
@@ -68,3 +68,4 @@ empirical_condition_density/
 - Earlier checks: data geometry, exact metric/velocity references, CPU/two-GPU workflows, and checkpoint recovery; details are in the [development log](../documents/development-log.md).
 - Revised checks: single-seed CPU/two-GPU workflows and plots passed; Adam gradients remain unmodified, and checkpoint continuation is exact.
 - Local evidence: `empirical_condition_density/.verification/`; includes data previews, implementation checks, and review checks.
+- Shared-component extraction and training/resume checks: [toolbox verification](../flow_matching/README.md#verification).
