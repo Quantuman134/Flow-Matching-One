@@ -28,3 +28,10 @@
 - Can a clean-image source supply enough content information for accurate one-step brightness transport, with brightness as the explicit condition?
 - This differs from a target uniquely determined by its condition: the target depends on both source image and brightness. Benefits over direct residual regression and sensitivity to training-time coverage remain open.
 - Design and proposed settings: [brightness experiment plan](experiment-02-brightness/plan.html).
+
+## Source and condition design
+
+- Can source abstraction and task-specific conditioning preserve enough target information for accurate one-step prediction at lower total inference cost?
+- How do endpoint uncertainty, velocity ambiguity along the training path, and model approximation error separately affect one-step accuracy?
+- Under matched inputs and compute, when does full-path flow matching improve on direct residual prediction?
+- Literature assessment, derivations, and proposed experiments: [task prior and condition analysis](../task_prior_condition/analysis.md); status: [topic README](../task_prior_condition/README.md).

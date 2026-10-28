@@ -13,3 +13,4 @@ PyYAML==6.0.2
 tqdm==4.67.1
 tensorboard==2.20.0
 gpustat==1.1.1
+wandb==0.31.0

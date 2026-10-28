@@ -43,3 +43,26 @@ training:
   checkpoint_interval: 2500
   output_dir: imagenet_brightness_flow/outputs/continuous-seed0
   resume_from: null
+
+validation:
+  enabled: true
+  interval: 2500
+  batch_size: 32
+  workers: 2
+  exposures: [-1.0, 0.0, 1.0]
+  nfe: 1
+
+wandb:
+  enabled: true
+  project: imagenet-brightness-flow
+  entity: null  # Replace null with your W&B team slug or personal username, e.g. my-research-team.
+  group: timestep-comparison-seed0
+  mode: online
+  api_key_env: WANDB_API_KEY  # Set this environment variable to your W&B API key before online training.
+  images_per_validation: 16
+
+pilot:
+  global_batches: [256, 1024]
+  image_budget: 65536
+  warmup_images: 2048
+  output_dir: imagenet_brightness_flow/outputs/pilot-seed0

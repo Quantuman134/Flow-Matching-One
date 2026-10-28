@@ -6,6 +6,7 @@
 | [Coding requirements](coding_requirements.md) | Code style, execution, review, logging, and device portability. |
 | [Project requirements](project_requirements.md) | Project organization, document responsibilities, and environment records. |
 | [Research](research.md) | Hypotheses, assumptions, and open questions. |
+| [Task prior and condition](../task_prior_condition/README.md) | Literature assessment and proposed study of task-related sources, source abstraction, and informative conditions. |
 | [Experiment plan](experiment-01-plan.html) | Condition-density experiment design and metrics. |
 | [Brightness experiment plan](experiment-02-brightness/plan.html) | ImageNet/SiT-S exposure transport, training timestep/NFE comparison, and error decomposition. |
 | [Brightness topic README](../imagenet_brightness_flow/README.md) | Runtime data loading, components, level-1 review status, and verification. |

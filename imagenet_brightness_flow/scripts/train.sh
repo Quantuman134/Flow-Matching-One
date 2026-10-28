@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ENTRYPOINT=launch
+if [[ "${1:-}" == "--pilot" ]]; then
+    ENTRYPOINT=pilot
+    shift
+fi
+
 if (( $# > 1 )); then
-    echo "Usage: bash imagenet_brightness_flow/scripts/train.sh [CONFIG.yaml]" >&2
+    echo "Usage: bash imagenet_brightness_flow/scripts/train.sh [--pilot] [CONFIG.yaml]" >&2
     exit 2
 fi
 
@@ -32,4 +38,4 @@ PY
 cd -- "$REPO_ROOT"
 source "$CONDA_BASE/etc/profile.d/conda.sh"
 conda activate "$ENV_NAME"
-exec python -u -m imagenet_brightness_flow.scripts.launch "$CONFIG_PATH"
+exec python -u -m "imagenet_brightness_flow.scripts.$ENTRYPOINT" "$CONFIG_PATH"

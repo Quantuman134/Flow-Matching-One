@@ -38,7 +38,7 @@ empirical_condition_density/
 | `src/config.py` | Load and validate YAML into dataclasses; Python defaults are fallbacks. |
 | `src/filesystem.py` | Resolve repository-relative outputs and resume paths independently of the working directory. |
 | `scripts/run.sh` | Select the Conda environment and call `scripts/launch.py`. |
-| `scripts/launch.py` | Validate resources and start `scripts/run.py` directly or through torchrun. |
+| `scripts/launch.py` | Validate resources and replace itself with `scripts/run.py` or torchrun, which owns worker shutdown. |
 | `scripts/run.py` | Train or reuse each K model, evaluate final weights, and export results. |
 | `src/metrics.py` | Nearest-neighbor metrics and fixed-direction sliced Wasserstein-1. |
 | `src/evaluation.py` | Schedule sampling, metrics, spread, and coordinate exports. |
@@ -58,6 +58,7 @@ empirical_condition_density/
 - Evaluation: each model's `evaluation/`; inputs, outputs by step count, spread samples, trajectories, metrics, and actual environment records; figures: root `figures/`.
 - Modes: `all` trains and evaluates; `train` trains only; `evaluate` recomputes evaluation from final weights.
 - Resume: set `resume: true` and `overwrite: false`; reuse completed work and resume incomplete training from the latest complete checkpoint; incompatible settings require a fresh run.
+- Interrupt: press Ctrl+C once and wait for worker cleanup; blocked communication can take about 30 seconds. Resume uses the latest complete checkpoint; interruption does not create an extra checkpoint.
 - Checkpoints: completion records store run-local names; a bare resume name resolves inside its run folder, and relative resume paths with directories resolve from the repository root.
 - Overwrite: `overwrite: true` deletes the previous output folder and starts fresh; currently enabled in the default YAML. Keep `resume: false`; evaluation-only mode requires `overwrite: false`.
 - Protection: overwrite accepts individual run folders under this topic's `outputs/` or `.verification/`; keep input YAML outside the output folder. With both `resume` and `overwrite` false, existing experiments are rejected.
@@ -67,5 +68,6 @@ empirical_condition_density/
 
 - Earlier checks: data geometry, exact metric/velocity references, CPU/two-GPU workflows, and checkpoint recovery; details are in the [development log](../documents/development-log.md).
 - Revised checks: single-seed CPU/two-GPU workflows and plots passed; Adam gradients remain unmodified, and checkpoint continuation is exact.
+- Shutdown checks: real terminal Ctrl+C passed on CPU and four GPUs; four-GPU checkpoint resume, two-GPU SIGTERM, and normal CPU/four-GPU completion passed with no leftover workers.
 - Local evidence: `empirical_condition_density/.verification/`; includes data previews, implementation checks, and review checks.
 - Shared-component extraction and training/resume checks: [toolbox verification](../flow_matching/README.md#verification).

@@ -201,6 +201,10 @@ def run(config_path):
             })
             logger.info("Complete | mode=%s | elapsed=%.1fs", config.mode, time.perf_counter() - started)
         accelerator.wait_for_everyone()
+    except KeyboardInterrupt:
+        if accelerator.is_main_process:
+            logger.info("Interrupted | stopping workers; completed checkpoints are retained.")
+        raise
     except Exception:
         if accelerator.is_main_process:
             logger.exception("Experiment failed")
@@ -217,4 +221,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
     arguments = parser.parse_args()
-    run(arguments.config)
+    try:
+        run(arguments.config)
+    except KeyboardInterrupt:
+        raise SystemExit(130)

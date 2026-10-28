@@ -30,6 +30,10 @@ class DataAndMetricTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         config_path = TOPIC_ROOT / "configs" / "experiment.yaml"
         self.config = load_config(config_path)
+        self.config = replace(
+            self.config, validation=replace(self.config.validation, enabled=False),
+            wandb=replace(self.config.wandb, enabled=False),
+        )
 
     def test_known_exposure_and_identity(self):
         source = torch.ones(3, 2, 2)

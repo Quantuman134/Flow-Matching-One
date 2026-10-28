@@ -36,5 +36,7 @@ PY
 )"
 
 cd -- "$REPO_ROOT"
-exec conda run --no-capture-output --name "$ENV_NAME" \
-    python -u -m empirical_condition_density.scripts.launch "$CONFIG_PATH"
+# Activate in this shell so no Conda wrapper remains between Ctrl+C and torchrun.
+source "$CONDA_BASE/etc/profile.d/conda.sh"
+conda activate "$ENV_NAME"
+exec python -u -m empirical_condition_density.scripts.launch "$CONFIG_PATH"

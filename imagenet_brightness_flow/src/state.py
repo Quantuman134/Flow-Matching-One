@@ -1,6 +1,8 @@
 """Resumable sample order, independent random streams, and FP32 EMA."""
 
 import copy
+import hashlib
+import json
 
 import torch
 
@@ -72,6 +74,8 @@ class TrainingState:
 
     def __init__(self, seed, data_size):
         self.step = 0
+        self.wandb_run_id = None
+        self.validation_step = -1
         self.order = SampleOrder(data_size, seed + 1)
         self.generators = {}
         for offset, name in enumerate(("augmentation", "exposure", "timestep"), start=2):
@@ -92,14 +96,29 @@ class TrainingState:
         generators = {}
         for name, generator in self.generators.items():
             generators[name] = generator.get_state()
-        state = {"step": self.step, "order": self.order.state_dict(), "generators": generators}
+        state = {
+            "step": self.step, "order": self.order.state_dict(), "generators": generators,
+            "wandb_run_id": self.wandb_run_id, "validation_step": self.validation_step,
+        }
         return state
 
     def load_state_dict(self, state):
         self.step = state["step"]
+        self.wandb_run_id = state.get("wandb_run_id")
+        self.validation_step = state.get("validation_step", -1)
         self.order.load_state_dict(state["order"])
         for name, values in state["generators"].items():
             self.generators[name].set_state(values.cpu())
+
+    def stream_digest(self):
+        """Compare consumed data/random streams across equal-image pilot runs."""
+        digest = hashlib.sha256()
+        order = json.dumps(self.order.state_dict(), sort_keys=True).encode()
+        digest.update(order)
+        for generator in self.generators.values():
+            values = generator.get_state().numpy().tobytes()
+            digest.update(values)
+        return digest.hexdigest()
 
 
 def make_ema(model):

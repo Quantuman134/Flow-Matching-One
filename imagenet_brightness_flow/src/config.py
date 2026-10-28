@@ -146,6 +146,82 @@ class TrainingConfig:
 
 
 @dataclass(frozen=True)
+class ValidationConfig:
+    enabled: bool
+    interval: int
+    batch_size: int
+    workers: int
+    exposures: list[float]
+    nfe: int
+
+    def __post_init__(self):
+        #region Validation protocol
+        if type(self.enabled) is not bool:
+            raise ValueError("validation.enabled must be boolean.")
+        for name in ("interval", "batch_size"):
+            value = getattr(self, name)
+            if type(value) is not int or value < 1:
+                raise ValueError(f"validation.{name} must be a positive integer.")
+        if type(self.workers) is not int or self.workers < 0:
+            raise ValueError("validation.workers must be a nonnegative integer.")
+        if not self.exposures or len(set(self.exposures)) != len(self.exposures):
+            raise ValueError("validation.exposures must contain unique exposure values.")
+        if self.nfe != 1 or type(self.nfe) is not int:
+            raise ValueError("Training monitor validation uses NFE 1.")
+        #endregion
+
+
+@dataclass(frozen=True)
+class WandbConfig:
+    enabled: bool
+    project: str
+    entity: str | None
+    group: str
+    mode: str
+    api_key_env: str
+    images_per_validation: int
+
+    def __post_init__(self):
+        #region Tracking validation
+        if type(self.enabled) is not bool:
+            raise ValueError("wandb.enabled must be boolean.")
+        for name in ("project", "group", "api_key_env"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"wandb.{name} must be a nonempty string.")
+        if self.entity is not None and (not isinstance(self.entity, str) or not self.entity.strip()):
+            raise ValueError("wandb.entity must be null or a nonempty string.")
+        if self.mode not in ("online", "offline"):
+            raise ValueError("wandb.mode must be online or offline.")
+        if self.images_per_validation != 16 or type(self.images_per_validation) is not int:
+            raise ValueError("wandb.images_per_validation must be 16.")
+        #endregion
+
+
+@dataclass(frozen=True)
+class PilotConfig:
+    global_batches: list[int]
+    image_budget: int
+    warmup_images: int
+    output_dir: str
+
+    def __post_init__(self):
+        #region Pilot validation
+        if not self.global_batches or len(set(self.global_batches)) != len(self.global_batches):
+            raise ValueError("pilot.global_batches must contain unique batch sizes.")
+        if type(self.image_budget) is not int or self.image_budget < 1:
+            raise ValueError("pilot.image_budget must be a positive integer.")
+        if type(self.warmup_images) is not int or not 0 <= self.warmup_images < self.image_budget:
+            raise ValueError("pilot.warmup_images must be smaller than the image budget.")
+        for batch in self.global_batches:
+            if type(batch) is not int or batch < 1 or self.image_budget % batch or self.warmup_images % batch:
+                raise ValueError("Pilot image budget and warmup must divide by each positive global batch.")
+        if not isinstance(self.output_dir, str) or not self.output_dir.strip():
+            raise ValueError("pilot.output_dir must be a nonempty path.")
+        #endregion
+
+
+@dataclass(frozen=True)
 class InputConfig:
     environment: str
     seed: int
@@ -153,6 +229,9 @@ class InputConfig:
     metrics: MetricConfig
     vae: VAEConfig
     training: TrainingConfig
+    validation: ValidationConfig
+    wandb: WandbConfig
+    pilot: PilotConfig
 
     def __post_init__(self):
         #region Input setting validation
@@ -160,6 +239,14 @@ class InputConfig:
             raise ValueError("environment must be a nonempty Conda environment name.")
         if type(self.seed) is not int or not 0 <= self.seed < 2**32:
             raise ValueError("seed must be an integer in [0,2**32).")
+        if self.validation.enabled:
+            for exposure in self.validation.exposures:
+                if exposure not in self.data.evaluation_exposures:
+                    raise ValueError("Monitor exposures must belong to data.evaluation_exposures.")
+            if 0 not in self.validation.exposures:
+                raise ValueError("Monitor exposures must include zero for identity RMSE.")
+        if self.wandb.enabled and self.data.preview_images != self.wandb.images_per_validation:
+            raise ValueError("Enabled W&B logging requires 16 fixed preview cases.")
         #endregion
 
 
@@ -190,7 +277,7 @@ def load_config(path: str | Path) -> InputConfig:
     #region Top-level validation
     if not isinstance(values, dict):
         raise ValueError("The configuration must be a YAML mapping.")
-    expected = {"environment", "seed", "data", "metrics", "vae", "training"}
+    expected = {"environment", "seed", "data", "metrics", "vae", "training", "validation", "wandb", "pilot"}
     if set(values) != expected:
         raise ValueError(f"Configuration keys must be {sorted(expected)}.")
     #endregion
@@ -202,5 +289,8 @@ def load_config(path: str | Path) -> InputConfig:
     values["metrics"] = metrics
     values["vae"] = vae
     values["training"] = training
+    values["validation"] = _settings(ValidationConfig, values["validation"])
+    values["wandb"] = _settings(WandbConfig, values["wandb"])
+    values["pilot"] = _settings(PilotConfig, values["pilot"])
     config = InputConfig(**values)
     return config

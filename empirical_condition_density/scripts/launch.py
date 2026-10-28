@@ -2,11 +2,10 @@
 
 1. Validate device availability, process count, and batch divisibility.
 2. Choose direct Python execution or multi-process torchrun.
-3. Set CPU thread limits and working directory; return the exit status.
+3. Set CPU thread limits and working directory; hand signal handling to the runner.
 """
 
 import os
-import subprocess
 import sys
 from pathlib import Path
 
@@ -25,7 +24,7 @@ from empirical_condition_density.src.filesystem import REPO_ROOT
 
 
 def launch(path):
-    """Validate resources, then start run.py with the YAML-selected process count."""
+    """Validate resources, then replace this process with the selected runner."""
     path = Path(path)
     path = path.expanduser()
     path = path.resolve()
@@ -54,8 +53,10 @@ def launch(path):
     # Use the same thread budget for PyTorch and CPU metric libraries.
     for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
         environment[name] = str(config.launch.cpu_threads)
-    exit_code = subprocess.call(command, cwd=REPO_ROOT, env=environment)
-    return exit_code
+
+    # Keep torchrun alive on Ctrl+C so it can stop and wait for every worker.
+    os.chdir(REPO_ROOT)
+    os.execvpe(sys.executable, command, environment)
 
 
 if __name__ == "__main__":
@@ -64,5 +65,4 @@ if __name__ == "__main__":
         raise SystemExit("Usage: python -m empirical_condition_density.scripts.launch CONFIG.yaml")
     #endregion
     config_path = sys.argv[1]
-    exit_code = launch(config_path)
-    raise SystemExit(exit_code)
+    launch(config_path)

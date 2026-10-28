@@ -570,7 +570,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 <tr>
 <td>Pilot</td>
-<td>Compare batch 256 and 1024 at equal image counts; record speed, memory, and validation RMSE.</td>
+<td>Compare batch 256 and 1024 at 65,536 images each (256 and 64 updates). Exclude the first 2,048 images from throughput timing; record speed, memory, and monitor RMSE.</td>
 </tr>
 </tbody>
 </table></div>
@@ -620,7 +620,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 <p>Runtime credential entry:</p>
 <pre><code class="language-bash">export WANDB_API_KEY="&lt;your-wandb-api-key&gt;"
 </code></pre>
-<p>The API-key variable follows the <a href="https://github.com/wandb/wandb/blob/main/wandb/env.py">W&amp;B SDK environment settings</a>. Verify authentication during the pilot; store environment-variable names in run settings and redact credential values from logs and snapshots.</p>
+<p>The API-key variable follows the <a href="https://github.com/wandb/wandb/blob/main/wandb/env.py">W&amp;B SDK environment settings</a>. Verify authentication with the configured account before online training. Offline mode records local logs and previews during development.</p>
 <h3 id="run-records">Run records</h3>
 <div aria-label="wandb logging table" class="table-wrap" role="region" tabindex="0"><table>
 <thead>
@@ -845,7 +845,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 <tr>
 <td>Latency</td>
-<td>Warm up and synchronize the GPU; measure integration and full source-encoding-to-output time.</td>
+<td>Time encoding, integration, and decoding during existing validation passes, synchronizing the GPU at their boundaries and including initial calls. Average generation time per image includes source encoding shared across exposures.</td>
 </tr>
 <tr>
 <td>Cost record</td>
@@ -941,7 +941,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 </tbody>
 </table></div>
-<p>W&amp;B account entry: supply the entity/team name and set the <code>WANDB_API_KEY</code> runtime variable before the pilot.</p>
+<p>W&amp;B account entry: set <code>wandb.entity</code> to your team slug or personal username and set the <code>WANDB_API_KEY</code> runtime variable before online training. The YAML includes comments beside both entries.</p>
 </section>
 <footer>Experiment design only · See the review items for proposed defaults.</footer>
 </main>

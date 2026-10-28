@@ -17,11 +17,13 @@
 | diffusers | 0.35.1 |
 | importlib_metadata / regex / zipp | 9.0.1 / 2026.9.29 / 4.1.2 |
 | gpustat | 1.1.1 |
+| W&B | 0.31.0 |
 
 - NumPy: installed **2.4.6**, planned **2.2.6**; no downgrade performed; SciPy accepts the installed version.
 - Observed snapshots: `local/flow-matching-one/environment.yml` and `requirements.lock.txt`; ignored by Git.
 - Brightness Step 1 observed torchvision/Pillow versions above and passed CPU/CUDA data checks; planned Pillow remains 11.3.0 in the baseline pins. Verification evidence records the tested versions.
 - Brightness Step 2: the user approved installing diffusers and its missing dependencies. The versions above passed `pip check`, cached-VAE encoding, SiT-S learning/sampling, and two-GPU training/resume checks. Installation report: `imagenet_brightness_flow/.verification/step2_checks/install-report.json`.
+- Brightness Step 3: user-approved W&B installation passed `pip check`, offline logging, and resumed run-ID checks. Package list and installation record: [W&B environment review](wandb-install-review.md).
 
 ## Planned baseline
 
@@ -29,7 +31,7 @@
 - Compute builds: **cu128** default; **cu126** and **cpu** selectable; direct dependency pins: [requirements.txt](requirements.txt).
 - CUDA wheels supply the runtime; the host needs a compatible driver; custom CUDA builds additionally need a local toolkit.
 - Setup profiles cover Linux with Bash/Conda; other platforms need separate profiles.
-- Brightness experiment: W&B SDK planned; pin its version and record the installed environment during implementation. Tracking settings: [experiment plan](../experiment-02-brightness/plan.html#wandb-logging).
+- Brightness tracking settings: [experiment plan](../experiment-02-brightness/plan.html#wandb-logging).
 
 ## Setup
 

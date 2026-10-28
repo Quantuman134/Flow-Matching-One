@@ -52,6 +52,10 @@ class FlowAndTrainingTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.config = load_config(TOPIC_ROOT / "configs" / "experiment.yaml")
+        self.config = replace(
+            self.config, validation=replace(self.config.validation, enabled=False),
+            wandb=replace(self.config.wandb, enabled=False),
+        )
 
     def test_timestep_grids_share_draws_and_k1_consumes_rng(self):
         samples = {}

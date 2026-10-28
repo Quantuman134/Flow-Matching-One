@@ -2,6 +2,49 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-28 — Step 3 review
+
+- The user approved committing current edits and proceeding to brightness Step 4: the four-run comparison, full validation, and reports. Full training awaits review of that implementation; online W&B account configuration remains pending.
+
+## 2026-10-28 — Trainer validation and cleanup folding
+
+- Added labeled fold regions around complete checkpoint/output, process-count, resume, loss, and gradient checks, including supporting calculations and branching.
+- Grouped periodic model evaluation, previews, reporting, timing, and synchronization in one region; clarified complete validation folding in the coding requirements.
+- Folded interruption/error handling and resource cleanup together; added this review convention to the coding requirements.
+- Verification: all validation raises are covered by balanced regions; executable AST matches the pre-edit source.
+
+## 2026-10-28 — Task source and condition analysis
+
+- Added a literature assessment and staged research proposal for task-related sources, abstract sources, informative conditions, and native one-step prediction; linked it from the research notes and document index.
+- Checked completed spiral measurements and brightness status. Derived the paired endpoint uncertainty/error decomposition and separated endpoint determinism from ambiguity along interpolation paths.
+- Reviewed primary sources including RenderFlow, PhiZero, Better Source Better Flow, SubFlow, and one-step physical-field generation. Proposed matched direct-regression/MeanFlow controls, source-context routing, condition compression, and oracle/predicted-condition evaluation.
+- Verification: checked quoted table values against saved summaries, analytic examples and residual-objective algebra, and local documentation links. Documentation only; no experiments or environment changes.
+
+## 2026-10-28 — Trainer review comments
+
+- Completed the comment update interrupted by an automatic-review usage limit on 2026-10-23. Strengthened the coding requirements to introduce long workflows with a stage outline and explain logical blocks, data flow, shapes, state changes, and synchronization for first-time reviewers.
+- Added trainer/helper docstrings and purpose comments covering setup/resume, paired microbatch selection, FP32 VAE endpoints, accumulation, EMA/data-cursor updates, validation, checkpoint publication, resource records, and cleanup.
+- Verification: Python syntax passed; executable AST matched the pre-edit source after stripping docstrings. Whitespace checks passed. Step 3 remains ready for level-1 review.
+
+## 2026-10-23 — Evaluation organization
+
+- Grouped `evaluate()` into commented blocks for data loading, source encoding, reference construction, flow integration, decoding, error accumulation, distributed reduction, and reporting. Extracted timing aggregation/reporting into `_summarize_timings()` and replaced positional timing-column references with metric names.
+- Four focused validation/tracking checks passed, preserving metrics, RNG state, encoding/generation call counts, and deterministic timing arithmetic. Whitespace checks passed; evidence: `imagenet_brightness_flow/.verification/step3_checks/validation_organization.log`. Step 3 remains ready for level-1 review.
+
+## 2026-10-23 — Timing existing validation passes
+
+- Removed `benchmark_generation()` and its five repeated generation passes. Validation now times its existing source encoding, Euler integration, and decoding; reference construction and metric calculation stay outside generation timing. Per-image generation cost includes source encoding shared across exposures, with device times and counts pooled across GPUs.
+- Updated the plan and usage notes. Four focused validation/tracking tests passed, including exact generation/encoding call counts and deterministic timing checks with a partial final batch. Evidence: `imagenet_brightness_flow/.verification/step3_checks/validation_timing.log`. Step 3 remains ready for level-1 review.
+
+## 2026-10-22 — Brightness Step 3
+
+- Committed reviewed Step 2/toolbox work as `ceb2647`. Added W&B scalar logging, fixed 16-image validation panels, checkpoint-linked run IDs, streamed FP64 metric aggregation, and disjoint distributed monitor partitions. Account entries remain configurable, with inline YAML hints for the entity and API-key environment variable.
+- The user approved W&B 0.31.0 and its listed dependencies; installed them in `flow-matching-one`, passed `pip check`, updated setup pins, and refreshed local environment snapshots. Package record: [W&B environment review](env/wandb-install-review.md).
+- Added a YAML-driven equal-image pilot for batches 256 and 1024, with 65,536 images per run and a 2,048-image throughput warmup. The pilot compares initialization/consumed-stream hashes and records speed, allocated memory, and monitor metrics.
+- Validation: eighteen CPU tests, real offline W&B training/resume, and two-GPU BF16 launch, uneven monitor partitions, relocated resume, and sampling passed. The distributed check counted 51 comparisons and saved exactly 16 panels; the resumed W&B run ID matched. Explicit SDK teardown keeps the offline unittest process cleanup deterministic. Syntax and whitespace checks passed; evidence: `imagenet_brightness_flow/.verification/step3_checks/`.
+- Resource pilot completed on four H100 NVL GPUs using raw ImageNet, SiT-S/2, cached FP32 VAE encoding, and offline W&B. Batch 256/1024 achieved 628.3/629.3 training images/s, each with 6.05 GiB peak allocated memory per GPU; monitor RGB RMSE was 0.13871/0.13892 over 3,000 comparisons. Both runs saved 16 panels and matched initialization/consumed-stream hashes. The short runs used 256/64 optimizer and EMA updates; the proposed full-run batch remains 1024 pending review. Summary: `.verification/step3_checks/resource-pilot/pilot-summary.json`.
+- Step 3 is ready for level-1 review. Live authentication awaits user-configured account details; Step 4 remains pending.
+
 ## 2026-10-22 — Step 2 review
 
 - The user approved committing brightness Step 2 and the shared toolbox refinements, and proceeding to Step 3. Updated their review status; Step 3 covers W&B, streaming validation, and the resource pilot.
@@ -89,6 +132,13 @@ Dated history only; current rules start at the [agent guide](../AGENTS.md), and 
 - Added the [ImageNet brightness plan](experiment-02-brightness/plan.html) in its own document folder; specified SiT-B with a frozen VAE, online exposure targets, four training-time settings, twelve NFE comparison cells, and brightness/spatial error diagnostics. Implementation remains unstarted.
 - Inspected dataset entries and sample image headers: `~/ILSVRC` contains pooled latents; raw JPEGs are under `/data/hkzhang/imagenet_raw`, with 1,281,167 training and 50,000 validation images. Checked official SiT and color-space references; linked the plan from the document index and research questions.
 - Validation: local document links, exposure identity, both luminance MSE decompositions, training/inference time-grid labels, evaluation counts, and whitespace checks passed. Preserved existing unrelated working-tree edits; no training or environment changes.
+
+## 2026-10-20 — Ctrl+C worker cleanup
+
+- Replaced the Conda subprocess wrapper with shell activation and changed the Python launcher to replace itself with the runner; torchrun now retains control until its workers exit.
+- Added an interruption log message and exit code 130 for the runner; retained existing complete checkpoints without writing an interruption checkpoint.
+- Validation: real terminal Ctrl+C on CPU/four GPUs, four-GPU checkpoint resume, two-GPU SIGTERM, and normal CPU/four-GPU completion passed; no leftover workers or repeated broken-pipe messages. Evidence: `.verification/interrupt_checks/`.
+- Observed cleanup: under two seconds in the CPU, resumed four-GPU, and SIGTERM checks; one four-GPU interruption required torchrun's 30-second timeout to stop blocked workers.
 
 ## 2026-10-20 — Output overwrite
 

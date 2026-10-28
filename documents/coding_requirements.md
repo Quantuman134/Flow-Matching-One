@@ -3,12 +3,13 @@
 ## Code style
 
 - Name files, modules, functions, and variables for their specific responsibility. Give different concepts distinct names; resolve ambiguous names by renaming them and updating references.
-- Add concise docstrings and necessary comments for responsibilities, shapes, mathematical choices, and non-obvious behavior; avoid narrating obvious code.
+- Use concise docstrings to explain responsibilities and key inputs/outputs; outline the main stages of long workflows for first-time reviewers.
+- Introduce logical stages in long functions with short purpose comments. Explain non-obvious data flow, shapes, mathematical choices, state changes, and synchronization where they occur; focus on intent and reasoning rather than restating individual statements.
 - Group nearby lines serving one purpose into logical blocks; separate blocks with a blank line.
 - Prefer explicit, step-by-step code with descriptive intermediate variables; keep each statement focused on one operation.
 - In most cases, avoid nested function calls, chained calls, and calls embedded in arguments, containers, or return expressions; calculate values separately before using them.
 - Prefer simple loops and shallow control flow over dense comprehensions and deeply nested blocks; prioritize ease of human review over compact code.
-- Fold related validation checks with labeled `#region` / `#endregion` comments; keep intermediate checks near their computation.
+- Fold complete validation blocks with labeled `#region` / `#endregion` comments, including supporting calculations and branching; keep intermediate checks near their computation. Give model validation with previews/reporting/synchronization and error handling with resource cleanup their own complete regions.
 
 ## Configuration and execution
 
