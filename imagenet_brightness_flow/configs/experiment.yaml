@@ -2,7 +2,7 @@ environment: flow-matching-one
 seed: 0
 
 data:
-  root: /data/hkzhang/imagenet_raw
+  root: /scratch/project/prj-02-visual-ai/hkzhang/ILSVRC/Data/CLS-LOC
   image_size: 256
   train_flip_probability: 0.5
   exposure_min: -1.0
@@ -28,9 +28,9 @@ training:
   timesteps: continuous
   updates: 200000
   global_batch: 1024
-  microbatch: 64
-  accumulation: 4
-  processes: 4
+  microbatch: 128
+  accumulation: 1
+  processes: 8
   device: cuda
   mixed_precision: bf16
   workers: 16
@@ -55,10 +55,8 @@ validation:
 wandb:
   enabled: true
   project: imagenet-brightness-flow
-  entity: null  # Replace null with your W&B team slug or personal username, e.g. my-research-team.
   group: timestep-comparison-seed0
   mode: online
-  api_key_env: WANDB_API_KEY  # Set this environment variable to your W&B API key before online training.
   images_per_validation: 16
 
 pilot:

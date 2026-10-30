@@ -7,6 +7,8 @@
 - Step 2: **reviewed; approved to proceed**, committed as `ceb2647`.
 - Step 3: **reviewed; approved to proceed**, committed as `54193da`; offline logging, distributed validation, and resource pilot verified. Online authentication awaits account configuration.
 - Step 4: comparison launcher, full-split evaluation, and reports **reviewed; approved**. Code development is complete; full training comparison remains pending.
+- Remote node launcher: **reviewed; approved for commit**; shell/configuration checks passed, compute-node execution remains pending.
+- Private W&B settings: **reviewed; approved for commit**; credential loading and isolation checks passed.
 - Design and metric definitions: [experiment plan](../documents/experiment-02-brightness/plan.html).
 
 ## Runtime data
@@ -74,6 +76,21 @@ Ctrl+C stops the active torchrun job and waits for worker cleanup. Completed che
 - Per model: existing training artifacts plus `final-evaluation/nfe-N/metrics.json` and 16 PNG panels; evaluation records include weight hashes, dataset fingerprints, actual hardware, latency, and peak memory.
 - Reports: `report.md`, `summary.json`, `tables/overall.csv`, `tables/by-exposure.csv`, four metric matrices, and figures for inference steps, exposures, luminance components, and monitoring curves.
 
+### Remote node
+
+Pass [remote_script/run_training.sh](remote_script/run_training.sh) to `~/get_node.sh --cmd`. From the repository root, for example:
+
+```bash
+bash ~/get_node.sh --mem=256G --gpus=8 --time=48 \
+    --cmd="$PWD/imagenet_brightness_flow/remote_script/run_training.sh"
+```
+
+Memory and time above are example allocation requests; choose values allowed by the cluster and suitable for the run. Initialize Conda and configure the [private W&B settings](#tracking-and-validation). The node must have the configured ImageNet mount, Conda environment, and pinned VAE cache.
+
+The launcher discovers the repository from its own location, initializes Conda through `CONDA_EXE` or `~/.bashrc` when needed, and delegates to `scripts/compare.sh`. It defaults to `configs/comparison.yaml`, currently selecting all four models and their final evaluations with resume enabled. It runs the comparison directly; run the pilot separately using the command below. An optional comparison YAML argument resolves from the caller's directory when invoking this launcher directly; `get_node.sh --cmd` accepts a script path only.
+
+The saved training layout is eight processes, microbatch 128, accumulation 1, and global batch 1024. Before using the separate pilot with this layout, change `pilot.global_batches` to compatible multiples of 1024; the existing batch 256 is incompatible. The existing checkpoint/resume rules above apply when an allocation ends.
+
 ## Single-image sampling
 
 Sample one image with final EMA weights:
@@ -89,7 +106,16 @@ python -m imagenet_brightness_flow.scripts.sample \
 
 ## Tracking and validation
 
-Set `wandb.entity` in YAML to your team slug or personal username; its inline comment gives an example. Supply your API key through `WANDB_API_KEY` in the launch environment. `wandb.mode: offline` saves local W&B records for development.
+Store local account settings in `<repository>/.secret/wandb.yaml`:
+
+```yaml
+api_key: your-api-key
+entity: your-username-or-team
+```
+
+The repository's `.secret/` folder is ignored by Git. For a fresh checkout, create the folder and copy [configs/wandb.example.yaml](configs/wandb.example.yaml) there as `wandb.yaml`; use directory permissions `700` and file permissions `600`.
+
+All entry points that load the experiment config, including the remote launcher, automatically read this file from the repository root. The loader sets `WANDB_API_KEY` and `WANDB_ENTITY`; existing nonempty environment values take priority. The shared YAML contains experiment tracking settings; the loader supplies internal defaults for the key variable and account override, preserving compatibility with earlier config exports. The API key stays outside exported settings and checkpoints; W&B run identity records retain the account name. `wandb.mode: offline` saves local records for development.
 
 Validation uses EMA weights and the fixed 1,000-source monitor at −1, 0, and +1 EV with NFE 1. Each event saves 16 source/reference/generated panels locally and logs those panels to W&B. FP64 sums/counts combine disjoint distributed partitions; reported RMSE takes the square root after pooling squared errors. The full 50,000-source comparison belongs to Step 4.
 

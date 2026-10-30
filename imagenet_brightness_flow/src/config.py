@@ -1,10 +1,12 @@
 """Validated experiment settings for online brightness-flow training."""
 
 import math
-from dataclasses import dataclass, fields
+from dataclasses import MISSING, dataclass, fields
 from pathlib import Path
 
 import yaml
+
+from .credentials import load_wandb_credentials
 
 
 @dataclass(frozen=True)
@@ -175,11 +177,11 @@ class ValidationConfig:
 class WandbConfig:
     enabled: bool
     project: str
-    entity: str | None
     group: str
     mode: str
-    api_key_env: str
     images_per_validation: int
+    entity: str | None = None
+    api_key_env: str = "WANDB_API_KEY"
 
     def __post_init__(self):
         #region Tracking validation
@@ -251,17 +253,20 @@ class InputConfig:
 
 
 def _settings(config_type, values: dict):
-    """Reject missing or misspelled keys before constructing one settings group."""
+    """Reject missing required or misspelled keys; retain dataclass defaults."""
     #region Mapping validation
     if not isinstance(values, dict):
         raise ValueError(f"{config_type.__name__} settings must be a mapping.")
     expected = set()
+    required = set()
     for field in fields(config_type):
         expected.add(field.name)
+        if field.default is MISSING and field.default_factory is MISSING:
+            required.add(field.name)
     supplied = set(values)
-    if supplied != expected:
-        missing = sorted(expected - supplied)
-        unknown = sorted(supplied - expected)
+    missing = sorted(required - supplied)
+    unknown = sorted(supplied - expected)
+    if missing or unknown:
         raise ValueError(f"{config_type.__name__}: missing keys {missing}; unknown keys {unknown}.")
     #endregion
     result = config_type(**values)
@@ -293,4 +298,6 @@ def load_config(path: str | Path) -> InputConfig:
     values["wandb"] = _settings(WandbConfig, values["wandb"])
     values["pilot"] = _settings(PilotConfig, values["pilot"])
     config = InputConfig(**values)
+    if config.wandb.enabled:
+        load_wandb_credentials(config.wandb.api_key_env)
     return config

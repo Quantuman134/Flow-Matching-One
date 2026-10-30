@@ -2,6 +2,30 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-30 — Remote launch approval and commit checks
+
+- The user approved committing the remote launcher, eight-GPU training layout, and private W&B configuration. Marked the launcher and credential changes reviewed/approved; full training remains pending.
+- Verified the user-created cluster environment, successful training-dependency imports and `pip check`, and the cached pinned VAE; refreshed ignored Conda/package snapshots. Corrected the user's new ImageNet root to `ILSVRC/Data/CLS-LOC` and verified 1,281,167 training images, 50,000 validation images, and 1,000 matching class folders. GPU execution remains a compute-node check.
+- Verification: 30 CPU checks passed, with four opt-in checks skipped; the first sandbox attempt was interrupted because local worker sockets were blocked, and the permitted rerun passed. Bash/Python syntax, whitespace, private-file permissions/Git exclusion, and a publishable-file API-key scan passed. Evidence: `imagenet_brightness_flow/.verification/commit-checks/brightness-cpu.log`.
+
+## 2026-10-30 — Compact W&B configuration
+
+- Removed `wandb.entity` and `wandb.api_key_env` from the shared experiment YAML. Their internal defaults preserve existing runtime behavior and compatibility with earlier exported configs; local account values remain in `.secret/wandb.yaml`.
+- Settings validation now accepts dataclass defaults while continuing to reject unknown keys and missing required settings.
+- Verification: eight credential/configuration tests passed, including private-file loading, saved-setting isolation, strict validation, and older config compatibility. Comparison loading, Python syntax, and whitespace checks passed; ready for level-1 review.
+
+## 2026-10-30 — Private W&B settings
+
+- Created the Git-ignored root `.secret/` folder and moved the API key from the shared YAML into its private `wandb.yaml`, with owner-only directory/file permissions. Restored `api_key_env` to the environment variable name and added a public empty template.
+- Configuration loading now reads private credentials for remote, local, pilot, and direct Python entry points. Existing environment values take priority; tracking resolves the private account name without embedding credentials in exported configuration. Private-file validation errors omit file contents.
+- Verification: six focused credential tests, YAML/configuration loading, Bash/Python syntax, Git exclusion, permission, and tracked-file credential checks passed. Full GPU training and online authentication remain unverified; changes are ready for level-1 review.
+
+## 2026-10-30 — Remote brightness launcher
+
+- Read the user's `~/get_node.sh`; added `imagenet_brightness_flow/remote_script/run_training.sh` for its script-path-only `--cmd` interface. The launcher initializes Conda in a noninteractive shell and delegates to the existing comparison launcher with YAML-owned settings and resume behavior.
+- Documented the allocation command, environment requirements, default four-model comparison, and the pilot batch compatibility requirement for the user's saved eight-GPU/microbatch-128 layout. Preserved the user's configuration edits.
+- Verification: Bash syntax, argument/configuration guards, and YAML batch/comparison checks passed. Compute-node training remains unverified in this session; the launcher is ready for level-1 review.
+
 ## 2026-10-30 — Step 4 approval and version commit
 
 - The user approved the completed code and requested a commit of the current version. Marked Step 4 reviewed/approved; full training and online W&B account setup remain pending.

@@ -5,6 +5,7 @@ __pycache__/
 .venv/
 .conda/
 .env
+/.secret/
 documents/env/local/
 data/
 checkpoints/

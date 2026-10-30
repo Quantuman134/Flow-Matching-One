@@ -42,8 +42,9 @@ class WandbTracker:
         config_values = None
         if record_config:
             config_values = asdict(config)
+        entity = settings.entity or os.environ.get("WANDB_ENTITY")
         run = wandb.init(
-            project=settings.project, entity=settings.entity, group=settings.group,
+            project=settings.project, entity=entity, group=settings.group,
             name=run_dir.name, id=state.wandb_run_id,
             resume="must" if resumed and known_run and settings.mode == "online" else None,
             mode=settings.mode, dir=str(folder), config=config_values,

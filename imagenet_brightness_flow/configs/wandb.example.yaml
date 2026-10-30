@@ -1,0 +1,3 @@
+# Copy to <repository>/.secret/wandb.yaml and fill in local account settings.
+api_key: null
+entity: null

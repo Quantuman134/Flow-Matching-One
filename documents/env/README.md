@@ -1,6 +1,12 @@
 # Environment
 
-## Installed
+## Current cluster
+
+- Checked **2026-10-30**: the user-created `flow-matching-one` environment is installed under the cluster's shared Miniconda installation; Python 3.11.13, PyTorch 2.9.1+cu128, torchvision 0.24.1+cu128, Accelerate 1.10.1, diffusers 0.35.1, and W&B 0.31.0 import successfully.
+- NumPy 2.2.6 and Pillow 11.3.0 match the planned pins. `pip check` passed; the pinned brightness VAE configuration and safetensors weights are cached.
+- Resolved snapshots: `local/flow-matching-one/environment.yml` and `requirements.lock.txt`, ignored by Git. The configured ImageNet index passed the expected split/class counts; GPU operation requires verification on the allocated compute node.
+
+## Earlier host
 
 - Name: `flow-matching-one`; platform: Linux x86_64; host: four NVIDIA H100 NVL GPUs; driver: **615.71.09**.
 - Status: experiment dependencies installed; the full baseline is only partially installed; `pip check` passed.
