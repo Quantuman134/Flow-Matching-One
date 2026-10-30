@@ -25,7 +25,7 @@ class WandbTracker:
         self.image_count = image_count
 
     @classmethod
-    def start(cls, config, state, run_dir, *, resumed):
+    def start(cls, config, state, run_dir, *, resumed, record_config=True):
         import wandb
 
         settings = config.wandb
@@ -39,16 +39,20 @@ class WandbTracker:
             state.wandb_run_id = uuid.uuid4().hex[:12]
         folder = run_dir / "wandb"
         folder.mkdir(parents=True, exist_ok=True)
+        config_values = None
+        if record_config:
+            config_values = asdict(config)
         run = wandb.init(
             project=settings.project, entity=settings.entity, group=settings.group,
             name=run_dir.name, id=state.wandb_run_id,
             resume="must" if resumed and known_run and settings.mode == "online" else None,
-            mode=settings.mode, dir=str(folder), config=asdict(config),
+            mode=settings.mode, dir=str(folder), config=config_values,
         )
         run.define_metric("optimizer_update")
         run.define_metric("processed_images")
         run.define_metric("train/*", step_metric="optimizer_update")
         run.define_metric("validation/*", step_metric="optimizer_update")
+        run.define_metric("final/*", step_metric="optimizer_update")
         record = {
             "run_id": run.id, "entity": run.entity, "project": settings.project,
             "group": settings.group, "mode": settings.mode, "url": run.url,
@@ -76,6 +80,23 @@ class WandbTracker:
             image = self.sdk.Image(panel.pixels, caption=panel.caption)
             images.append(image)
         payload["validation/previews"] = images
+        self.run.log(payload)
+
+    def final_evaluation(self, step, processed_images, nfe, report, panels):
+        """Keep final metrics and the same 16 cases under a separate NFE key."""
+        #region Final preview validation
+        if len(panels) != self.image_count:
+            raise ValueError("Final evaluation requires exactly 16 preview panels.")
+        #endregion
+        prefix = f"final/nfe-{nfe}"
+        payload = flatten_scalars(report, prefix)
+        payload["optimizer_update"] = step
+        payload["processed_images"] = processed_images
+        images = []
+        for panel in panels:
+            image = self.sdk.Image(panel.pixels, caption=panel.caption)
+            images.append(image)
+        payload[f"{prefix}/previews"] = images
         self.run.log(payload)
 
     def finish(self, exit_code=0):

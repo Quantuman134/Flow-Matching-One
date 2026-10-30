@@ -240,6 +240,22 @@ class OfflineTrackingTests(ValidationFixture):
         path = run_record.parent / 'validation' / 'update-0000003' / 'metrics.json'
         self.assertEqual(len(json.loads(path.read_text())['previews']), 16)
 
+        # Final evaluation reopens the same SDK run and keeps NFE previews separate.
+        from imagenet_brightness_flow.src.comparison_config import load_comparison
+        from imagenet_brightness_flow.src.final_evaluation import evaluate_run
+
+        settings, _ = load_comparison(TOPIC_ROOT / 'configs/comparison.yaml')
+        settings = replace(settings, nfe=[1, 4], batch_size=8, workers=0, log_interval=10)
+        model = SiT(latent_size=2, width=16, depth=1, heads=2)
+        evaluate_run(config, settings, model=model, vae=vae)
+        identity = json.loads(run_record.read_text())
+        self.assertEqual(identity['run_id'], first_id)
+        for nfe in settings.nfe:
+            path = run_record.parent / 'final-evaluation' / f'nfe-{nfe}' / 'metrics.json'
+            report = json.loads(path.read_text())
+            self.assertEqual(len(report['previews']), 16)
+            self.assertEqual(report['overall']['comparisons'], 34 * 9)
+
 
 if __name__ == '__main__':
     torch.set_num_threads(2)

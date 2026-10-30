@@ -1,0 +1,10 @@
+environment: flow-matching-one
+base_config: experiment.yaml                 # Relative to this comparison YAML.
+output_dir: ../outputs/comparison-seed0      # Relative to this comparison YAML.
+mode: all             # all, train, evaluate, report
+resume: true          # Reuse completed runs/cells and resume complete checkpoints.
+timesteps: [continuous, 16, 4, 1]
+nfe: [1, 4, 16]
+batch_size: 32        # Final evaluation batch per GPU.
+workers: 2
+log_interval: 100     # Source batches between final-evaluation progress messages.

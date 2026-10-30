@@ -2,6 +2,19 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-30 — Step 4 approval and version commit
+
+- The user approved the completed code and requested a commit of the current version. Marked Step 4 reviewed/approved; full training and online W&B account setup remain pending.
+- Included the comparison/evaluation/reporting implementation and current user-edited settings: 200,000 updates, batch 1024, 16 training workers, eight CPU threads, validation every 5,000 updates, and checkpoints every 10,000 updates. Aligned the HTML plan's budget and intervals with those settings.
+- Verification: 22 CPU checks passed, with four opt-in checks skipped; earlier real two-GPU and offline W&B verification is recorded below. Whitespace checks passed. Evidence: `imagenet_brightness_flow/.verification/step4_checks/commit_cpu_20261030.log`.
+
+## 2026-10-28 — Brightness Step 4
+
+- Committed reviewed work as `54193da`; added a YAML/Bash four-run comparison with checkpoint/cell resume, paired-run checks, and supervised-timestep flags.
+- Added distributed final EMA evaluation on the complete validation split, fixed per-NFE previews/W&B keys, progress/latency/memory records, and weight/dataset compatibility checks. Added CSV matrices, exposure tables, a Markdown report, and four figures.
+- Verification: 22 CPU checks, actual offline W&B final logging, and a real two-GPU workflow passed, including uneven source partitions, 153 comparisons and 16 panels per cell, relocated report rebuilding, and interruption with no remaining workers. CPU fixtures exercised all twelve cells, moved-output/snapshot reuse, missing-panel recovery, and changed-weight rejection; evidence: `imagenet_brightness_flow/.verification/step4_checks/`.
+- Step 4 is ready for level-1 review; full training remains pending. Preserved the user's concurrent training-budget, worker/thread, and checkpoint/validation-interval edits.
+
 ## 2026-10-28 — Step 3 review
 
 - The user approved committing current edits and proceeding to brightness Step 4: the four-run comparison, full validation, and reports. Full training awaits review of that implementation; online W&B account configuration remains pending.

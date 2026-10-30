@@ -173,7 +173,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 <tr>
 <td>Proposed batch / budget</td>
-<td>Global batch 1024; 25,000 updates per run; seed 0.</td>
+<td>Global batch 1024; 200,000 updates per run; seed 0.</td>
 </tr>
 <tr>
 <td>Tracking</td>
@@ -541,7 +541,7 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 <tr>
 <td>Training budget</td>
-<td>25,000 updates × 1024 images = 25.6M image presentations, approximately 20 dataset passes.</td>
+<td>200,000 updates × 1024 images = 204.8M image presentations, approximately 160 dataset passes.</td>
 </tr>
 
 <tr>
@@ -562,11 +562,11 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 <tr>
 <td>Validation</td>
-<td>Every 2,500 updates and at completion, combining coincident events; monitor at NFE 1 and log 16 previews.</td>
+<td>Every 5,000 updates and at completion, combining coincident events; monitor at NFE 1 and log 16 previews.</td>
 </tr>
 <tr>
 <td>Checkpoints</td>
-<td>Every 2,500 updates and completion; model, EMA, optimizer, RNG streams, sampler position, update count, and W&amp;B run ID.</td>
+<td>Every 10,000 updates and completion; model, EMA, optimizer, RNG streams, sampler position, update count, and W&amp;B run ID.</td>
 </tr>
 <tr>
 <td>Pilot</td>
@@ -933,11 +933,11 @@ footer { padding: 8px 3px; font-size: 12px; color: var(--muted); }
 </tr>
 <tr>
 <td>Global batch and budget</td>
-<td>1024 and 25,000 updates; 25.6M image presentations.</td>
+<td>1024 and 200,000 updates; 204.8M image presentations.</td>
 </tr>
 <tr>
 <td>Validation schedule</td>
-<td>Every 2,500 updates; fixed monitor subset and 16 W&amp;B previews.</td>
+<td>Every 5,000 updates; fixed monitor subset and 16 W&amp;B previews.</td>
 </tr>
 </tbody>
 </table></div>

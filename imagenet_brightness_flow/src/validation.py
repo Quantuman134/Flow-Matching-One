@@ -64,7 +64,8 @@ def _summarize_timings(local_timings, accelerator, batch_size):
 
 
 @torch.no_grad()
-def evaluate(model, vae, dataset, exposures, config, accelerator, *, nfe=1):
+def evaluate(model, vae, dataset, exposures, config, accelerator, *, nfe=1,
+             logger=None, log_interval=100):
     """Load sources, generate each exposure, accumulate errors, then report.
 
     Each rank owns a disjoint source subset. Collectives run after all local
@@ -91,7 +92,7 @@ def evaluate(model, vae, dataset, exposures, config, accelerator, *, nfe=1):
     source_images = 0
     generated_images = 0
 
-    for batch in loader:
+    for batch_number, batch in enumerate(loader, start=1):
         # Encode the clean sources once; reuse their latents across exposures.
         source = batch["image"].to(accelerator.device, non_blocking=True)
         _synchronize(accelerator.device)
@@ -128,6 +129,18 @@ def evaluate(model, vae, dataset, exposures, config, accelerator, *, nfe=1):
             values = image_errors(output, reference.image, config.metrics.flat_variance_threshold, reference.saturated)
             values["latent_mse"] = latent_mse(transported.samples, reference_latent)
             totals.update(index, values)
+
+        if logger is not None and accelerator.is_main_process:
+            progress_due = batch_number == 1 or batch_number % log_interval == 0
+            if progress_due or source_images == len(indices):
+                elapsed = time.perf_counter() - started
+                remaining = len(indices) - source_images
+                speed = source_images / elapsed
+                eta = remaining / speed
+                logger.info(
+                    "Evaluation | NFE=%s | rank-zero sources=%s/%s | sources/s=%.1f | ETA=%.1fs",
+                    nfe, source_images, len(indices), speed, eta,
+                )
 
     # Combine timing records and metric sums across GPUs after local work ends.
     _synchronize(accelerator.device)
@@ -184,8 +197,8 @@ def render_previews(model, vae, datasets, config, device, *, step, nfe):
     return panels
 
 
-def save_validation(run_dir, step, report, panels):
-    folder = run_dir / "validation" / f"update-{step:07d}"
+def save_panels(folder, panels):
+    """Write fixed RGB panels and return folder-relative image references."""
     folder.mkdir(parents=True, exist_ok=True)
     preview_records = []
     for index, panel in enumerate(panels):
@@ -193,6 +206,12 @@ def save_validation(run_dir, step, report, panels):
         image = Image.fromarray(panel.pixels)
         image.save(folder / filename)
         preview_records.append({"image": filename, "caption": panel.caption})
+    return preview_records
+
+
+def save_validation(run_dir, step, report, panels):
+    folder = run_dir / "validation" / f"update-{step:07d}"
+    preview_records = save_panels(folder, panels)
     report = {**report, "optimizer_update": step, "previews": preview_records}
     path = folder / "metrics.json"
     path.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")

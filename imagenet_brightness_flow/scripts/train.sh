@@ -5,10 +5,13 @@ ENTRYPOINT=launch
 if [[ "${1:-}" == "--pilot" ]]; then
     ENTRYPOINT=pilot
     shift
+elif [[ "${1:-}" == "--compare" ]]; then
+    ENTRYPOINT=compare
+    shift
 fi
 
 if (( $# > 1 )); then
-    echo "Usage: bash imagenet_brightness_flow/scripts/train.sh [--pilot] [CONFIG.yaml]" >&2
+    echo "Usage: bash imagenet_brightness_flow/scripts/train.sh [--pilot|--compare] [CONFIG.yaml]" >&2
     exit 2
 fi
 
@@ -16,7 +19,11 @@ SCRIPT_DIR="$(dirname -- "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd -- "$SCRIPT_DIR" && pwd)"
 TOPIC_DIR="$(dirname -- "$SCRIPT_DIR")"
 REPO_ROOT="$(dirname -- "$TOPIC_DIR")"
-CONFIG_PATH="${1:-$TOPIC_DIR/configs/experiment.yaml}"
+DEFAULT_CONFIG="$TOPIC_DIR/configs/experiment.yaml"
+if [[ "$ENTRYPOINT" == "compare" ]]; then
+    DEFAULT_CONFIG="$TOPIC_DIR/configs/comparison.yaml"
+fi
+CONFIG_PATH="${1:-$DEFAULT_CONFIG}"
 CONFIG_DIR="$(dirname -- "$CONFIG_PATH")"
 CONFIG_NAME="$(basename -- "$CONFIG_PATH")"
 CONFIG_DIR="$(cd -- "$CONFIG_DIR" && pwd)"

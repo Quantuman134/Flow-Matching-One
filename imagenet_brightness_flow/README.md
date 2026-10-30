@@ -5,8 +5,8 @@
 - Development level: **1**, selected by the user; review each implementation step before the next.
 - Step 1: **reviewed; approved to proceed**.
 - Step 2: **reviewed; approved to proceed**, committed as `ceb2647`.
-- Step 3: **reviewed; approved to proceed**; offline logging, distributed validation, and resource pilot verified. Online authentication awaits account configuration.
-- Step 4: full training comparison and final evaluation pending.
+- Step 3: **reviewed; approved to proceed**, committed as `54193da`; offline logging, distributed validation, and resource pilot verified. Online authentication awaits account configuration.
+- Step 4: comparison launcher, full-split evaluation, and reports **reviewed; approved**. Code development is complete; full training comparison remains pending.
 - Design and metric definitions: [experiment plan](../documents/experiment-02-brightness/plan.html).
 
 ## Runtime data
@@ -42,6 +42,39 @@ Full training uses SiT-S/2 from the [shared flow matching toolbox](../flow_match
 | `vae.local_files_only` | Load the pinned weights from the local Hugging Face cache. |
 
 Dataset/output paths and resume paths containing directories resolve from the repository root; `~` expands. The Bash launcher's configuration argument resolves from the caller's directory. Resume requires matching model, data, VAE, optimizer, precision, and batch/process settings; the update budget may increase. Prefetched data uses a private cursor, while checkpoints store the committed cursor.
+
+## Comparison
+
+Settings: [configs/comparison.yaml](configs/comparison.yaml). The base training YAML supplies the seed, update budget, GPU layout, optimizer, and W&B settings; the comparison YAML selects timestep settings, inference steps, evaluation loading, mode, and output root.
+
+`base_config` and `output_dir` resolve relative to the comparison YAML; base training data paths retain their repository-root convention. The saved `resolved-comparison.yaml` uses folder-relative references and can be replayed after moving the comparison folder.
+
+```bash
+bash imagenet_brightness_flow/scripts/compare.sh [COMPARISON.yaml]
+```
+
+| Setting | Behavior |
+| --- | --- |
+| `timesteps: [continuous, 16, 4, 1]` | Four sequential training runs with paired initialization and random streams. |
+| `nfe: [1, 4, 16]` | Twelve final EMA evaluation cells, each using all 50K validation sources and nine exposures. |
+| `mode: all` | Train missing models, evaluate missing cells, then export reports. |
+| `mode: train` / `evaluate` / `report` | Run training, final evaluation/reporting, or report rebuilding. |
+| `resume: true` | Reuse completed models/cells; resume incomplete training from the latest complete checkpoint. |
+| `batch_size`, `workers`, `log_interval` | Per-GPU final-evaluation batch/loading and progress frequency. |
+
+Each cell saves 16 fixed panels and logs them to the training run under a separate `final/nfe-N` W&B key. Tables and figures flag Euler calls outside a discrete model's training grid; the continuous model's one-step cell is labeled as evaluation at the t=0 boundary.
+
+The launcher records the scientific protocol and rejects incompatible reuse. Launch a moved folder's `resolved-comparison.yaml` to regenerate job paths and reuse its relative artifact references. Final evaluation can use another GPU count; incomplete training retains its original process/accumulation requirements.
+
+Ctrl+C stops the active torchrun job and waits for worker cleanup. Completed checkpoints/cells remain available for resume.
+
+### Comparison outputs
+
+- Root: `outputs/comparison-seed0/`; manifest, resolved settings, terminal log, derived `configs/`, and `runs/timesteps-*/`.
+- Per model: existing training artifacts plus `final-evaluation/nfe-N/metrics.json` and 16 PNG panels; evaluation records include weight hashes, dataset fingerprints, actual hardware, latency, and peak memory.
+- Reports: `report.md`, `summary.json`, `tables/overall.csv`, `tables/by-exposure.csv`, four metric matrices, and figures for inference steps, exposures, luminance components, and monitoring curves.
+
+## Single-image sampling
 
 Sample one image with final EMA weights:
 
@@ -85,7 +118,7 @@ Observed on four H100 NVL GPUs, with microbatch 64, online FP32 VAE encoding, BF
 | 256 | 256 | 628.3 | 6.05 | 0.13871 |
 | 1024 | 64 | 629.3 | 6.05 | 0.13892 |
 
-Both runs matched initialization/consumed-stream hashes, evaluated 3,000 monitor comparisons, and saved 16 panels. Batch 1024 is feasible; measured throughput and memory are similar. Use these short-run RMSEs as implementation diagnostics: the runs have different optimizer/EMA update counts. The proposed full-run batch remains 1024, pending review. Evidence: `.verification/step3_checks/resource-pilot/pilot-summary.json`.
+Both runs matched initialization/consumed-stream hashes, evaluated 3,000 monitor comparisons, and saved 16 panels. Batch 1024 is feasible; measured throughput and memory are similar. Use these short-run RMSEs as implementation diagnostics: the runs have different optimizer/EMA update counts. The full-run batch is 1024. Evidence: `.verification/step3_checks/resource-pilot/pilot-summary.json`.
 
 ## Outputs
 
@@ -115,11 +148,15 @@ Both runs matched initialization/consumed-stream hashes, evaluated 3,000 monitor
 | `src/vae.py` | Frozen VAE encoding and decoding. |
 | `src/state.py` / `src/training.py` | Reproducible streams, resumable data order, EMA, Accelerate training, and checkpoint records. |
 | `src/aggregation.py`, `validation.py`, `tracking.py` | Streaming statistics, monitor/previews, and W&B logging. |
+| `src/comparison_config.py`, `comparison.py`, `artifacts.py` | Comparison settings, sequential jobs/resume, atomic records, and file hashes. |
+| `src/final_evaluation.py`, `reporting.py` | Full-split EMA evaluation, per-NFE previews, comparison tables/figures, and timestep flags. |
 | `scripts/train.sh`, `launch.py`, `train.py`, `sample.py`, `pilot.py` | YAML launcher, training, single-image generation, and equal-image pilot. |
+| `scripts/compare.sh`, `compare.py`, `evaluate.py` | One-command comparison and distributed final-evaluation entry points. |
 | `tests/test_data_and_metrics.py` | Focused tests using temporary image fixtures. |
 | `tests/test_flow_and_training.py` | Objective/sampler checks, conditioning learning, and exact checkpoint continuation with prefetched data. |
 | `tests/test_real_model.py`, `test_entrypoints.py` | Opt-in real-image/model and two-GPU workflow checks. |
 | `tests/test_validation_and_tracking.py` | Metric aggregation, fixed panels, run-ID resume, and paired pilot inputs; opt-in real offline SDK workflow. |
+| `tests/test_comparison.py`, `test_comparison_entrypoints.py` | Twelve-cell fixture evaluation, flags/reports, relocated resume, final W&B keys, and opt-in two-GPU launch/interruption. |
 
 `sample_pairs` receives separate caller-owned augmentation and exposure generators. `image_errors` receives raw generated RGB, reference RGB, the configured variance threshold, and an optional saturation mask; it returns per-image tensors, including MSEs and mask counts.
 
@@ -147,3 +184,9 @@ BRIGHTNESS_RUN_TRACKING_CHECKS=1 python -m unittest imagenet_brightness_flow.tes
 ```
 
 GPU checks use the cached VAE; the launcher check requires two visible GPUs. Evidence: `.verification/step2_checks/`. Shared-component checks and extraction comparisons: [toolbox verification](../flow_matching/README.md#verification). Architecture attribution: [third-party notices](../flow_matching/THIRD_PARTY_NOTICES.md).
+
+Step 4 checks passed: 22 CPU checks plus a real two-GPU comparison with 17 validation sources, nine exposures, NFE 1/4, and 16 panels per cell. Relocated report rebuilding, interruption cleanup, and actual offline W&B final logging passed; CPU fixtures cover all twelve cells, complete-cell reuse, missing-panel recovery, and changed-weight rejection. Evidence: `.verification/step4_checks/`; fixture figures are in `fixture-report-preview/`.
+
+```bash
+BRIGHTNESS_RUN_COMPARISON_CHECKS=1 python -m unittest imagenet_brightness_flow.tests.test_comparison_entrypoints -v
+```

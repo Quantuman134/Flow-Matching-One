@@ -1,5 +1,6 @@
 """Launch the configured number of workers, preserving torchrun signal handling."""
 
+import argparse
 import os
 import sys
 
@@ -9,7 +10,8 @@ from imagenet_brightness_flow.src.config import load_config
 from imagenet_brightness_flow.src.filesystem import REPO_ROOT, resolve_project_path
 
 
-def launch(path):
+def launch(path, evaluation=None):
+    """Replace this process with training or final-evaluation workers."""
     path = resolve_project_path(path)
     config = load_config(path)
     settings = config.training
@@ -26,7 +28,15 @@ def launch(path):
             "-m", "torch.distributed.run", "--standalone", "--nnodes=1",
             f"--nproc_per_node={settings.processes}",
         ])
-    command.extend(["-m", "imagenet_brightness_flow.scripts.train", "--config", str(path)])
+    config_path = str(path)
+    module = "imagenet_brightness_flow.scripts.train"
+    if evaluation is not None:
+        module = "imagenet_brightness_flow.scripts.evaluate"
+    command.extend(["-m", module, "--config", config_path])
+    if evaluation is not None:
+        evaluation_path = resolve_project_path(evaluation)
+        evaluation_path = str(evaluation_path)
+        command.extend(["--comparison", evaluation_path])
     environment = os.environ.copy()
     for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
         environment[name] = str(settings.cpu_threads)
@@ -35,6 +45,8 @@ def launch(path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("Usage: python -m imagenet_brightness_flow.scripts.launch CONFIG.yaml")
-    launch(sys.argv[1])
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("config")
+    parser.add_argument("--evaluate", metavar="COMPARISON.yaml")
+    arguments = parser.parse_args()
+    launch(arguments.config, arguments.evaluate)
