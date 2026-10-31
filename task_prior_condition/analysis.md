@@ -2,6 +2,8 @@
 
 Date: **2026-10-28**. Status: literature analysis and proposed research plan; no new training results.
 
+Literature update **2026-10-30**: [benchmark candidates](benchmark_candidates.md) adds task-specific access checks and close comparisons including LBM and Marigold V2.
+
 ## Assessment
 
 Both directions are worth investigating together. A task-related source can preserve content, and a condition can specify the transformation or resolve the remaining ambiguity. The stronger research question is: **which source–condition representation gives accurate one-step transport at the lowest total inference cost, and when does flow-matching training improve on direct residual prediction?**
@@ -94,6 +96,8 @@ is exactly direct residual regression. Full-path FM may offer useful training au
 | Work | Relevant contribution | Implication for this project |
 | --- | --- | --- |
 | [Rectified Flow](https://arxiv.org/abs/2209.03003) | Transport between arbitrary observed distributions and trajectory straightening. | Task-related endpoints and efficient transport have established foundations. |
+| [LBM](https://github.com/gojasper/LBM), ICCV 2025 | Single-step latent bridge image translation, including relighting and dense geometry prediction, with public code. | A required close baseline for a general one-step prediction claim. |
+| [pix2pix-Turbo](https://arxiv.org/abs/2403.12036), 2024; [official code](https://github.com/GaParmar/img2img-turbo) | One-step image translation. | Consult its designs and training techniques when designing our method, as suggested by the user. |
 | [BBDM](https://openaccess.thecvf.com/content/CVPR2023/papers/Li_BBDM_Image-to-Image_Translation_With_Brownian_Bridge_Diffusion_Models_CVPR_2023_paper.pdf) and [I2SB](https://i2sb.github.io/) | Learn bridges between image domains or degraded and clean images. | Starting from an informative image is an established approach. |
 | [RenderFlow](https://arxiv.org/html/2601.06928v1) | Uses albedo as source, geometry/material buffers and an environment map as conditions, stochastic bridge training, pretrained Wan2.1, and optional reference keyframes. | Strong application precedent; isolate source design from pretraining, auxiliary losses, and additional guidance. |
 | [Better Source, Better Flow](https://arxiv.org/html/2602.05951v1), February 2026 | Learns a condition-dependent source, analyzes intrinsic FM variance, and addresses source collapse and instability. | A close comparator for learned-source design; justify the task representation and one-step objective beyond this framework. |

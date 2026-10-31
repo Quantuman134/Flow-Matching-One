@@ -35,3 +35,5 @@
 - How do endpoint uncertainty, velocity ambiguity along the training path, and model approximation error separately affect one-step accuracy?
 - Under matched inputs and compute, when does full-path flow matching improve on direct residual prediction?
 - Literature assessment, derivations, and proposed experiments: [task prior and condition analysis](../task_prior_condition/analysis.md); status: [topic README](../task_prior_condition/README.md).
+- Candidate tasks, baseline comparisons, and checked dataset-access options: [benchmark candidates](../task_prior_condition/benchmark_candidates.md).
+- Expanded pool for user selection: [60-task catalog](../task_prior_condition/candidate_catalog.md), including broader modalities and restricted-data alternatives.

@@ -2,6 +2,23 @@
 
 Dated history only; current rules start at the [agent guide](../AGENTS.md), and current experiment status lives in the topic README.
 
+## 2026-10-30 — pix2pix-Turbo reference
+
+- Recorded pix2pix-Turbo as a reference for future method design in the related-work table; kept paper/code links and removed the expanded note and proposed experiments at the user's request.
+
+## 2026-10-30 — Broad task selection catalog
+
+- Expanded the initial shortlist into 60 numbered candidate tasks spanning restoration, controlled synthesis, dense perception, video/motion, geometry, physical prediction, audio, imaging, actions, and biological structures. The user will select the tasks.
+- Added proposed source/condition designs, dataset and baseline references, explicit access-certainty labels, and alternatives for gated or unsuitable data. Checked further primary sources, including SIDD, DIV2K, IXI, fastMRI, ShapeNet, Dress Code, LibriSpeech, and relevant method repositories.
+- Verification: checked candidate IDs, table structure, local links, and whitespace. Dataset terms marked unresolved remain unverified. No downloads, experiments, or environment changes.
+
+## 2026-10-30 — Prediction benchmark candidates
+
+- Added ranked candidate tasks, source/condition designs, dataset-access notes, task baselines, metric definitions, and a proposed paper suite to the task prior/condition analysis.
+- Identified LBM as a close general one-step comparator and Marigold V2 as a current dense-prediction baseline. Distinguished matched-data experiments from released-checkpoint comparisons and public data from gated models or unreleased training sets.
+- Checked official data terms for GoPro, RealBlur, MIT Multi-Illumination, Hypersim, Virtual KITTI 2, DIODE, PDEBench, GenLit, and Poly Haven; recorded unresolved video-content terms and dataset reproduction requirements.
+- Verification: checked local documentation links, whitespace, source citations, and separation of proposed experiments from observed findings. No archives downloaded, models run, or environment changes made.
+
 ## 2026-10-30 — Remote launch approval and commit checks
 
 - The user approved committing the remote launcher, eight-GPU training layout, and private W&B configuration. Marked the launcher and credential changes reviewed/approved; full training remains pending.

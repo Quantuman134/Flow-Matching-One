@@ -3,6 +3,8 @@
 ## Status
 
 - Literature and research analysis dated **2026-10-28**: [analysis and proposed plan](analysis.md).
+- Task, baseline, and dataset-access review dated **2026-10-30**: [benchmark candidates](benchmark_candidates.md).
+- Current selection pool: [60-task catalog](candidate_catalog.md), with source/condition proposals, datasets, access labels, comparison methods, and restricted-data alternatives. Task selection remains with the user.
 - Documentation only; proposed experiments have not been implemented or run.
 - Existing experiment development levels and review status remain in their topic READMEs. Select a development level here before future implementation.
 
